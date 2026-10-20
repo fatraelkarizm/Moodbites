@@ -14,7 +14,9 @@ if (process.env.NODE_ENV === 'production') throw new Error('seed-demo tidak bole
 const url = process.env.MIGRATION_DATABASE_URL;
 if (!url) throw new Error('MIGRATION_DATABASE_URL wajib diisi dengan koneksi role owner');
 
-const PIN = '20262026';
+// Di server publik, set DEMO_PIN acak: PIN bawaan ini tertulis di repo.
+const PIN = process.env.DEMO_PIN ?? '20262026';
+if (!/^\d{6,12}$/.test(PIN)) throw new Error('DEMO_PIN harus 6-12 angka');
 const client = new pg.Client({ connectionString: url });
 await client.connect();
 
