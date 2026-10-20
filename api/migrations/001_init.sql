@@ -67,7 +67,12 @@ do $$ declare t text; begin
  end loop;
 end $$;
 
-do $$ begin create role moodbite_app nologin nosuperuser nocreatedb nocreaterole noinherit nobypassrls; exception when duplicate_object then null; end $$;
+-- Cek dulu: role owner di server tidak punya CREATEROLE, jadi moodbite_app dibuat terpisah oleh superuser.
+do $$ begin
+  if not exists (select 1 from pg_roles where rolname = 'moodbite_app') then
+    create role moodbite_app nologin nosuperuser nocreatedb nocreaterole noinherit nobypassrls;
+  end if;
+end $$;
 grant usage on schema public to moodbite_app;
 grant execute on function public.app_account_id(),public.app_is_researcher() to moodbite_app;
 grant select,insert,update on public.patient_profiles,public.meal_entries,public.mood_entries,public.sleep_entries to moodbite_app;
