@@ -59,7 +59,7 @@ Mulai hari ke-6, di halaman **Hari ini** akan muncul ajakan **"Langkah terakhir 
 
 - MoodBite **tidak** menyimpan nama, NIK, atau nomor HP. Yang tercatat hanya kode partisipan.
 - Jika HP dipakai bersama orang lain, tekan tombol **Keluar** (ikon pintu di kanan atas) setelah selesai.
-- Setelah 5 kali salah PIN, akun dikunci selama 15 menit. Tunggu sebentar lalu coba lagi, atau hubungi tim peneliti.
+- Setelah 5 kali salah PIN, akun dikunci selama 15 menit. Tunggu sebentar lalu coba lagi. Kalau lupa PIN, hubungi tim peneliti untuk mendapat PIN baru.
 
 ## Butuh bantuan?
 

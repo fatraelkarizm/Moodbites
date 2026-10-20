@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { dayCheckSchema, feedbackSchema, mealCreateSchema, moodCreateSchema, profileSchema, sleepSchema } from '../src/schemas.js';
+import { dayCheckSchema, feedbackSchema, patientCodeSchema, mealCreateSchema, moodCreateSchema, profileSchema, sleepSchema } from '../src/schemas.js';
 import { jakartaDate, toCsv } from '../src/lib.js';
+import { generatePin } from '../src/pin.js';
 
 test('profile requires complication detail only when yes',()=>{
  const base={age:30,sex:'female',weightKg:60,heightCm:160,education:'S1',maritalStatus:'single',occupation:'Guru',incomeGroup:'3m_5m',diagnosisDurationMonths:12,hasComplications:false,hasTreatmentSideEffects:false};
@@ -46,4 +47,13 @@ test('day check and end-of-study feedback',()=>{
  assert.equal(feedbackSchema.safeParse({ease:4,barriers:['tidak_ada']}).success,false);
  assert.equal(feedbackSchema.safeParse({ease:4,barriers:['lainnya']}).success,false);
  assert.equal(feedbackSchema.safeParse({ease:4,barriers:['lainnya'],barriersOther:'Mata lelah'}).success,true);
+});
+test('patient code is normalised and validated',()=>{
+ assert.equal(patientCodeSchema.parse(' p021 '),'P021');
+ assert.equal(patientCodeSchema.safeParse('P 01').success,false);
+ assert.equal(patientCodeSchema.safeParse("P1'; drop").success,false);
+ assert.equal(patientCodeSchema.safeParse('X').success,false);
+});
+test('generated PIN is 8 digits',()=>{
+ for(let i=0;i<50;i++) assert.match(generatePin(),/^\d{8}$/);
 });

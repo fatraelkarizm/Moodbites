@@ -97,6 +97,9 @@ export const feedbackSchema = z.object({
   }
 });
 
+export const patientCodeSchema = z.string().trim().toUpperCase()
+  .regex(/^[A-Z0-9-]{2,20}$/, 'Kode hanya huruf, angka, atau tanda hubung (2–20 karakter)');
+
 export const idParamsSchema = z.object({ id: uuidSchema });
 export const rangeQuerySchema = z.object({ from: dateSchema.optional(), to: dateSchema.optional() });
 

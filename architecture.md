@@ -125,7 +125,7 @@ moodbite/
 | `/api/history` | GET | 7 hari terakhir milik sendiri |
 | `/api/admin/export/:tabel.csv` | GET | hanya role `researcher` |
 
-Akun dibuat lewat skrip `create-account` di server (bukan endpoint publik). Skrip itu membuat PIN acak dan menampilkannya **sekali** untuk diberikan ke pasien lewat saluran terpisah.
+Akun **peneliti** dibuat lewat skrip `create-account` di server. Akun **pasien** dibuat dan PIN-nya direset oleh peneliti dari dashboard (`/api/admin/patients`, migrasi `005`), hanya untuk role patient; PIN dibuat acak di server, disimpan sebagai hash argon2id, ditampilkan sekali, dan reset PIN menghapus semua sesi pasien tersebut. Skrip itu membuat PIN acak dan menampilkannya **sekali** untuk diberikan ke pasien lewat saluran terpisah.
 Layar Mood Forecast tidak dibuat (di luar scope).
 
 ## 5. Autentikasi dan Sesi

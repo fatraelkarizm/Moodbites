@@ -192,7 +192,7 @@ td { font-size: 11px; }th { font-size: 10px; }
 @media (max-width: 760px) {
   .relation-panel .panel-title { flex-direction: column; }
   .export-grid { grid-template-columns: 1fr 1fr; }.filter-row { flex-wrap: wrap; }.filter-row input { flex: 1 1 40%; }.filter-row input[aria-label="Kode partisipan"] { width: auto; }
-  .admin-sidebar { transform: translateX(-100%); transition: transform .24s ease; width: 245px; }.admin-sidebar.open { transform: translateX(0); }.sidebar-brand > button { display: grid; place-items: center; width: 32px; height: 32px; color: white; border: 0; background: rgba(255,255,255,.08); border-radius: 9px; }.sidebar-overlay { position: fixed; inset: 0; z-index: 40; border: 0; background: rgba(20,38,35,.45); }.admin-main { }.admin-topbar { padding: 0 16px; height: 66px; }.mobile-menu { display: grid; place-items: center; width: 38px; height: 38px; margin-right: 10px; border: 1px solid var(--line); border-radius: 10px; background: white; }.admin-actions .search, .admin-actions > .avatar { display: none; }.admin-content { padding: 20px 15px 15px; }.admin-welcome { display: block; }.admin-welcome h2 { font-size: 20px; }.filter-row { margin-top: 15px; }.filter-row select, .filter-row button { flex: 1; }.kpi-grid { grid-template-columns: 1fr 1fr; gap: 9px; }.kpi-card { padding: 12px; display: block; }.kpi-icon { width: 34px; height: 34px; margin-bottom: 9px; }.kpi-card strong { font-size: 19px; }.analytics-grid { grid-template-columns: 1fr; gap: 9px; margin-top: 9px; }.panel { padding: 14px; }.patient-panel { margin-top: 9px; }.table-wrap { margin-left: -14px; margin-right: -14px; }.admin-footnote { justify-content: center; }
+  .admin-sidebar { transform: translateX(-100%); transition: transform .24s ease; width: 245px; }.admin-sidebar.open { transform: translateX(0); }.sidebar-brand > button { display: grid; place-items: center; width: 32px; height: 32px; color: white; border: 0; background: rgba(255,255,255,.08); border-radius: 9px; }.sidebar-overlay { position: fixed; inset: 0; z-index: 40; border: 0; background: rgba(20,38,35,.45); }.admin-main { margin-left: 0; }.admin-topbar { padding: 0 16px; height: 66px; }.mobile-menu { display: grid; place-items: center; width: 38px; height: 38px; margin-right: 10px; border: 1px solid var(--line); border-radius: 10px; background: white; }.admin-actions .search, .admin-actions > .avatar { display: none; }.admin-content { padding: 20px 15px 15px; }.admin-welcome { display: block; }.admin-welcome h2 { font-size: 20px; }.filter-row { margin-top: 15px; }.filter-row select, .filter-row button { flex: 1; }.kpi-grid { grid-template-columns: 1fr 1fr; gap: 9px; }.kpi-card { padding: 12px; display: block; }.kpi-icon { width: 34px; height: 34px; margin-bottom: 9px; }.kpi-card strong { font-size: 19px; }.analytics-grid { grid-template-columns: 1fr; gap: 9px; margin-top: 9px; }.panel { padding: 14px; }.patient-panel { margin-top: 9px; }.table-wrap { margin-left: -14px; margin-right: -14px; }.admin-footnote { justify-content: center; }
   .distribution-panel { margin-top: 9px; }.distribution-bars { grid-template-columns: 1fr; gap: 7px; }.distribution-bars > div { grid-template-columns: 24px 1fr 28px; }.distribution-bars small { display: none; }
 }
 
@@ -237,3 +237,19 @@ td { font-size: 11px; }th { font-size: 10px; }
 .export-grid a.primary-export { border-color: var(--green-700); background: var(--green-100); }
 @media (max-width: 980px) { .feas-grid { grid-template-columns: 1fr 1fr; } .feas-cols { grid-template-columns: 1fr; } }
 @media (max-width: 410px) { .feas-grid { grid-template-columns: 1fr; } .feas-cols .bar-list > div { grid-template-columns: 120px 1fr 56px; } }
+
+/* Kelola pasien (peneliti) */
+.manage-panel { margin-top: 12px; }
+.manage-create { margin-top: 14px; display: grid; grid-template-columns: minmax(180px, 260px) auto 1fr; gap: 6px 12px; align-items: end; }
+.manage-create .primary-button { flex: none; padding: 11px 16px; }
+.manage-create small { grid-column: 1 / -1; font-size: 10px; color: var(--muted); }
+.manage-panel > .notice { margin-top: 12px; }
+.credential-card { margin-top: 14px; border: 2px solid var(--green-700); background: var(--green-100); border-radius: 14px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.credential-card dl { display: flex; gap: 28px; margin: 6px 0 8px; }
+.credential-card dt { font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .8px; }
+.credential-card dd { margin: 2px 0 0; font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: 26px; font-weight: 700; color: var(--green-900); letter-spacing: 2px; }
+.credential-warning { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #5b4a1f; }
+.credential-actions { display: flex; gap: 8px; }.credential-actions button { display: flex; align-items: center; gap: 6px; flex: none; }
+.manage-panel td .text-button { white-space: nowrap; }
+.manage-panel td:first-child { display: table-cell; }
+@media (max-width: 760px) { .manage-create { grid-template-columns: 1fr; } .credential-actions { width: 100%; } .credential-actions button { flex: 1; justify-content: center; } }

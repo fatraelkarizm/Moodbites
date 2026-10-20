@@ -26,4 +26,9 @@ describe('styles.css', () => {
     }
     expect([...missing]).toEqual([])
   })
+
+  it('tidak memiliki aturan kosong (tanda properti terhapus tanpa sengaja)', () => {
+    const empty = [...css.matchAll(/([^{}]+)\{\s*\}/g)].map((m) => m[1]!.trim())
+    expect(empty).toEqual([])
+  })
 })

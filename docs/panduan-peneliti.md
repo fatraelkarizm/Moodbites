@@ -4,8 +4,8 @@ Panduan ini menjelaskan cara memantau pengisian dan mengambil data setelah 7 har
 
 ## 1. Sebelum studi dimulai
 
-1. **Akun dibuat oleh developer.** Kirim ke developer daftar kode partisipan yang diinginkan (misalnya `P001`–`P020`) dan kode untuk akun peneliti. Developer akan mengirimkan PIN untuk setiap kode **satu kali**.
-2. Catat pasangan kode dan PIN di tempat aman. PIN tidak bisa dilihat lagi; bila hilang, developer harus membuat PIN baru.
+1. **Akun peneliti** dibuat oleh developer. Akun **pasien** dibuat sendiri oleh peneliti lewat dashboard, di menu **Kelola pasien** (lihat bagian 2a).
+2. Setiap PIN pasien hanya ditampilkan **sekali** saat akun dibuat atau direset. Catat di tempat aman. Bila hilang, cukup tekan **Reset PIN**.
 3. Berikan ke setiap partisipan: link aplikasi, kode, PIN, dan **Panduan Singkat untuk Partisipan** (`panduan-pasien.md`). Kirim PIN lewat saluran yang terpisah dari link bila memungkinkan.
 4. Pastikan *ethical clearance* dan *informed consent* sudah ada sebelum data pertama diisi.
 5. Minta developer menghapus semua data uji coba sebelum partisipan asli mulai mengisi.
@@ -13,6 +13,16 @@ Panduan ini menjelaskan cara memantau pengisian dan mengambil data setelah 7 har
 ## 2. Masuk ke dashboard
 
 Buka link yang sama dengan partisipan, lalu masuk memakai **kode dan PIN peneliti**. Dashboard peneliti akan terbuka otomatis.
+
+## 2a. Kelola pasien (membuat akun & reset PIN)
+
+Di dashboard, buka menu **Kelola pasien**:
+
+- **Membuat akun:** kode pasien disarankan otomatis (P001, P002, …) dan boleh diubah (huruf, angka, atau tanda hubung). Tekan **Buat akun**. Sistem membuat PIN 8 angka secara acak.
+- **PIN hanya ditampilkan sekali.** Tekan **Salin kode & PIN** atau catat, lalu berikan ke pasien. Sebaiknya kirim PIN terpisah dari link aplikasi. Tekan **Sudah dicatat** untuk menutup.
+- **Pasien lupa PIN atau akunnya terkunci** (5 kali salah PIN): tekan **Reset PIN** pada baris pasien. PIN lama langsung tidak berlaku, pasien otomatis keluar dari HP-nya, dan kunci akun dibuka.
+- **Status pasien:** *Belum onboarding* (belum mengisi profil awal), *Aktif*, atau *Terkunci*.
+- Jangan menulis nama atau nomor HP pasien sebagai kode. Simpan daftar pasangan nama ↔ kode di luar aplikasi, sesuai protokol studi.
 
 ## 3. Memantau pengisian (setiap hari)
 

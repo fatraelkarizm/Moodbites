@@ -1,11 +1,11 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Activity, ClipboardCheck, Flag, GitCompareArrows, Download, FileSpreadsheet, HeartPulse, LayoutDashboard, LogOut, Menu, MoonStar,
+  Activity, Check, ClipboardCheck, Copy, Flag, KeyRound, RotateCcw, UserPlus, GitCompareArrows, Download, FileSpreadsheet, HeartPulse, LayoutDashboard, LogOut, Menu, MoonStar,
   RefreshCw, ShieldCheck, UsersRound, X,
 } from 'lucide-react'
 import { Brand, EmotionFace, Loading, Notice } from '../components'
 import { barrierOptions, foodCategories, labelOf, moodOptions, type ScaleOption } from '../data'
-import { api, ApiError, exportTables, type Analytics, type Me, type ResearchInsights, type Feasibility } from '../lib/api'
+import { api, ApiError, exportTables, type Analytics, type Me, type ResearchInsights, type Feasibility, type PatientList, type PatientCredential } from '../lib/api'
 import { ForestTable, LinkedTimeline } from '../insights'
 import { researchSentence } from '../lib/insights'
 import { dateRange, formatFullDate, formatShortDate, jakartaToday, shiftDate } from '../lib/date'
@@ -143,6 +143,92 @@ function FeasibilityPanel({ data }: { data: Feasibility }) {
   )
 }
 
+/** Manajemen akun pasien oleh peneliti: membuat akun dan mereset PIN. PIN hanya tampil sekali. */
+function PatientsPanel() {
+  const [list, setList] = useState<PatientList | null>(null)
+  const [code, setCode] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [credential, setCredential] = useState<(PatientCredential & { reset: boolean }) | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  const load = () => api.patients().then((l) => { setList(l); setCode(l.suggestedCode) }).catch((e) => setError(e instanceof ApiError ? e.message : 'Gagal memuat daftar pasien.'))
+  useEffect(() => { load() }, [])
+
+  const show = (c: PatientCredential, reset: boolean) => { setCredential({ ...c, reset }); setCopied(false); load() }
+
+  const create = async (event: FormEvent) => {
+    event.preventDefault()
+    const normalized = code.trim().toUpperCase()
+    if (!/^[A-Z0-9-]{2,20}$/.test(normalized)) { setError('Kode hanya boleh huruf, angka, atau tanda hubung (2–20 karakter).'); return }
+    setError(''); setBusy(true)
+    try { show(await api.createPatient(normalized), false) } catch (e) { setError(e instanceof ApiError ? e.message : 'Gagal membuat akun.') } finally { setBusy(false) }
+  }
+
+  const reset = async (patientCode: string) => {
+    if (!window.confirm(`Reset PIN ${patientCode}?\n\nPIN lama langsung tidak berlaku dan pasien akan keluar dari HP-nya. Berikan PIN baru kepada pasien.`)) return
+    setError(''); setBusy(true)
+    try { show(await api.resetPatientPin(patientCode), true) } catch (e) { setError(e instanceof ApiError ? e.message : 'Gagal mereset PIN.') } finally { setBusy(false) }
+  }
+
+  const copy = async () => {
+    if (!credential) return
+    try { await navigator.clipboard.writeText(`Kode: ${credential.code}\nPIN: ${credential.pin}`); setCopied(true) } catch { setCopied(false) }
+  }
+
+  const status = (p: PatientList['patients'][number]) =>
+    p.locked ? { label: 'Terkunci', cls: 'warning' } : !p.onboardingComplete ? { label: 'Belum onboarding', cls: 'neutral' } : { label: 'Aktif', cls: 'good' }
+
+  return (
+    <section className="panel manage-panel" id="kelola">
+      <div className="panel-title"><div><h3>Kelola pasien</h3><p>Buat akun pasien baru atau reset PIN. Data pasien tetap hanya kode, tanpa nama atau nomor HP.</p></div></div>
+
+      <form className="manage-create" onSubmit={create}>
+        <label className="field"><span>Kode pasien baru</span><input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} maxLength={20} placeholder="P001" aria-describedby="code-hint" /></label>
+        <button type="submit" className="primary-button" disabled={busy}><UserPlus size={17} /> {busy ? 'Memproses…' : 'Buat akun'}</button>
+        <small id="code-hint">Kode disarankan otomatis dan boleh diubah. PIN 8 angka dibuat acak oleh sistem.</small>
+      </form>
+
+      {error && <Notice kind="error">{error}</Notice>}
+
+      {credential && (
+        <div className="credential-card" role="status">
+          <div>
+            <p className="eyebrow">{credential.reset ? 'PIN BARU' : 'AKUN DIBUAT'}</p>
+            <dl><div><dt>Kode</dt><dd>{credential.code}</dd></div><div><dt>PIN</dt><dd>{credential.pin}</dd></div></dl>
+            <p className="credential-warning"><KeyRound size={14} /> PIN ini <strong>hanya ditampilkan sekali</strong>. Catat sekarang dan berikan langsung ke pasien, sebaiknya terpisah dari link aplikasi.</p>
+          </div>
+          <div className="credential-actions">
+            <button type="button" className="secondary-button" onClick={copy}>{copied ? <><Check size={15} /> Tersalin</> : <><Copy size={15} /> Salin kode & PIN</>}</button>
+            <button type="button" className="primary-button" onClick={() => setCredential(null)}>Sudah dicatat</button>
+          </div>
+        </div>
+      )}
+
+      <div className="table-wrap"><table>
+        <thead><tr><th>Kode</th><th>Status</th><th>Terakhir mengisi</th><th>Hari tercatat</th><th>Dibuat</th><th /></tr></thead>
+        <tbody>
+          {!list && <tr><td colSpan={6}>Memuat…</td></tr>}
+          {list?.patients.length === 0 && <tr><td colSpan={6}>Belum ada pasien. Buat akun pertama di atas.</td></tr>}
+          {list?.patients.map((p) => {
+            const st = status(p)
+            return (
+              <tr key={p.code}>
+                <td><strong>{p.code}</strong></td>
+                <td><span className={`status ${st.cls}`}>{st.label}</span></td>
+                <td>{p.lastEntryDate ? formatShortDate(p.lastEntryDate) : '–'}</td>
+                <td>{p.activeDays} hari</td>
+                <td>{formatShortDate(p.createdAt.slice(0, 10))}{p.pinResetAt ? ' · PIN direset' : ''}</td>
+                <td><button type="button" className="text-button" disabled={busy} onClick={() => reset(p.code)}><RotateCcw size={14} /> Reset PIN</button></td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table></div>
+    </section>
+  )
+}
+
 export function AdminPage({ me, onLogout }: { me: Me; onLogout: () => void }) {
   const today = jakartaToday()
   const [filters, setFilters] = useState({ from: shiftDate(today, -6), to: today, code: '' })
@@ -225,6 +311,7 @@ export function AdminPage({ me, onLogout }: { me: Me; onLogout: () => void }) {
         <p className="nav-label">RUANG KERJA</p>
         <nav className="admin-nav">
           <button onClick={() => go('ringkasan')}><LayoutDashboard size={19} /> Ringkasan</button>
+          <button onClick={() => go('kelola')}><UserPlus size={19} /> Kelola pasien</button>
           <button onClick={() => go('kelayakan')}><Flag size={19} /> Kelayakan studi</button>
           <button onClick={() => go('tren')}><Activity size={19} /> Tren & distribusi</button>
           <button onClick={() => go('hubungan')}><GitCompareArrows size={19} /> Analisis hubungan</button>
@@ -366,6 +453,8 @@ export function AdminPage({ me, onLogout }: { me: Me; onLogout: () => void }) {
               </section>
             </>
           )}
+
+          <PatientsPanel />
 
           <section className="panel export-panel" id="ekspor">
             <div className="panel-title"><div><h3>Ekspor CSV</h3><p>Berisi <strong>seluruh</strong> data (tidak terpengaruh filter), hanya kode partisipan tanpa id internal. Untuk analisis, mulai dari <strong>daily_summary.csv</strong>: satu baris per partisipan per hari, termasuk hari yang kosong.</p></div></div>

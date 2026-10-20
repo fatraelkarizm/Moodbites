@@ -138,6 +138,12 @@ export interface Feasibility {
   }
 }
 
+export interface PatientList {
+  suggestedCode: string
+  patients: Array<{ code: string; createdAt: string; pinResetAt: string | null; onboardingComplete: boolean; locked: boolean; lastEntryDate: string | null; activeDays: number }>
+}
+export interface PatientCredential { code: string; pin: string }
+
 export const exportTables = ['daily_summary', 'patient_profiles', 'meal_entries', 'mood_entries', 'sleep_entries', 'study_feedback'] as const
 
 export class ApiError extends Error {
@@ -211,6 +217,9 @@ export const api = {
   feedbackStatus: () => request<FeedbackStatus>('/feedback'),
   saveFeedback: (feedback: Feedback) => request<unknown>('/feedback', { method: 'PUT', body: feedback }),
   feasibility: () => request<Feasibility>('/admin/feasibility'),
+  patients: () => request<PatientList>('/admin/patients'),
+  createPatient: (code: string) => request<PatientCredential>('/admin/patients', { method: 'POST', body: { code } }),
+  resetPatientPin: (code: string) => request<PatientCredential>(`/admin/patients/${encodeURIComponent(code)}/reset-pin`, { method: 'POST' }),
 
   async history(): Promise<History> {
     const h = await request<History>('/history')
