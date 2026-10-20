@@ -1,0 +1,21 @@
+[Unit]
+Description=MoodBite API
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=moodbite
+Group=moodbite
+WorkingDirectory=/opt/moodbite/api
+EnvironmentFile=/etc/moodbite/api.env
+ExecStart=/usr/bin/node dist/src/server.js
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/log/moodbite
+
+[Install]
+WantedBy=multi-user.target

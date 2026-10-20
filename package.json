@@ -1,0 +1,11 @@
+{
+  "name": "moodbite",
+  "version": "1.2.0",
+  "private": true,
+  "scripts": {
+    "build": "npm run build --prefix api && npm run build --prefix web",
+    "test": "npm test --prefix api && npm test --prefix web",
+    "dev:api": "npm run dev --prefix api",
+    "dev:web": "npm run dev --prefix web"
+  }
+}
