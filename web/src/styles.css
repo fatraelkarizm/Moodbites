@@ -253,3 +253,15 @@ td { font-size: 11px; }th { font-size: 10px; }
 .manage-panel td .text-button { white-space: nowrap; }
 .manage-panel td:first-child { display: table-cell; }
 @media (max-width: 760px) { .manage-create { grid-template-columns: 1fr; } .credential-actions { width: 100%; } .credential-actions button { flex: 1; justify-content: center; } }
+
+/* Dashboard per halaman */
+.admin-nav button { width: 100%; }
+.analytics-grid.first { margin-top: 0; }
+.section-links { margin-top: 12px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.section-links button { display: grid; grid-template-columns: 22px 1fr auto; gap: 10px; align-items: center; text-align: left; border: 1px solid var(--line); background: white; border-radius: 12px; padding: 13px 14px; color: #2b3d3a; }
+.section-links button:hover { border-color: var(--green-500); background: #f6faf8; }
+.section-links button > svg:first-child { color: var(--green-700); }
+.section-links strong, .section-links small { display: block; }.section-links strong { font-size: 12px; }.section-links small { font-size: 10px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
+.admin-content > .panel:first-of-type, .admin-content > .kpi-grid:first-of-type { margin-top: 0; }
+@media (max-width: 980px) { .section-links { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .section-links { grid-template-columns: 1fr; } }

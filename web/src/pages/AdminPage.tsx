@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Activity, Check, ClipboardCheck, Copy, Flag, KeyRound, RotateCcw, UserPlus, GitCompareArrows, Download, FileSpreadsheet, HeartPulse, LayoutDashboard, LogOut, Menu, MoonStar,
+  Activity, Check, ChevronRight, ClipboardCheck, Copy, Flag, KeyRound, RotateCcw, UserPlus, GitCompareArrows, Download, FileSpreadsheet, HeartPulse, LayoutDashboard, LogOut, Menu, MoonStar,
   RefreshCw, ShieldCheck, UsersRound, X,
 } from 'lucide-react'
 import { Brand, EmotionFace, Loading, Notice } from '../components'
@@ -229,6 +229,21 @@ function PatientsPanel() {
   )
 }
 
+type Section = 'ringkasan' | 'kelola' | 'kelayakan' | 'tren' | 'hubungan' | 'partisipan' | 'ekspor'
+const SECTIONS: Array<{ id: Section; label: string; eyebrow: string; description: string; icon: typeof LayoutDashboard; usesFilters: boolean }> = [
+  { id: 'ringkasan', label: 'Ringkasan', eyebrow: 'ANALITIK DESKRIPTIF', description: 'Angka utama dan kelengkapan pengisian', icon: LayoutDashboard, usesFilters: true },
+  { id: 'kelola', label: 'Kelola pasien', eyebrow: 'AKUN PASIEN', description: 'Buat akun pasien baru dan reset PIN', icon: UserPlus, usesFilters: false },
+  { id: 'kelayakan', label: 'Kelayakan studi', eyebrow: 'PRD BAGIAN 11', description: 'Penyelesaian 7 hari, waktu mengisi, kemudahan, dan hambatan', icon: Flag, usesFilters: false },
+  { id: 'tren', label: 'Tren & distribusi', eyebrow: 'ANALITIK DESKRIPTIF', description: 'Stres, kategori makanan, emosi, dan tidur per hari', icon: Activity, usesFilters: true },
+  { id: 'hubungan', label: 'Analisis hubungan', eyebrow: 'ANALISIS WITHIN-PERSON', description: 'Hubungan makanan, tidur, dan stres dengan emosi', icon: GitCompareArrows, usesFilters: true },
+  { id: 'partisipan', label: 'Partisipan', eyebrow: 'KELENGKAPAN', description: 'Kelengkapan pengisian per partisipan', icon: UsersRound, usesFilters: true },
+  { id: 'ekspor', label: 'Ekspor data', eyebrow: 'UNDUH CSV', description: 'File CSV untuk Excel, SPSS, R, atau Python', icon: Download, usesFilters: false },
+]
+const sectionFromHash = (): Section => {
+  const id = window.location.hash.slice(1)
+  return SECTIONS.some((s) => s.id === id) ? (id as Section) : 'ringkasan'
+}
+
 export function AdminPage({ me, onLogout }: { me: Me; onLogout: () => void }) {
   const today = jakartaToday()
   const [filters, setFilters] = useState({ from: shiftDate(today, -6), to: today, code: '' })
@@ -237,18 +252,26 @@ export function AdminPage({ me, onLogout }: { me: Me; onLogout: () => void }) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [mobileMenu, setMobileMenu] = useState(false)
+  const [section, setSection] = useState<Section>(sectionFromHash)
+  const [reloadKey, setReloadKey] = useState(0)
+  useEffect(() => {
+    const onHash = () => setSection(sectionFromHash())
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
   const [lag, setLag] = useState<0 | 1>(0)
   const [insights, setInsights] = useState<ResearchInsights | null>(null)
   const [insightError, setInsightError] = useState('')
   const [feasibility, setFeasibility] = useState<Feasibility | null>(null)
   const loadFeasibility = () => { api.feasibility().then(setFeasibility).catch(() => setFeasibility(null)) }
-  useEffect(loadFeasibility, [])
+  useEffect(() => { if (section === 'kelayakan') loadFeasibility() }, [section])
   useEffect(() => {
-    setInsightError('')
+    if (section !== 'hubungan') return
+    setInsightError(''); setInsights(null)
     api.adminInsights(filters.from, filters.to, filters.code || undefined, lag)
       .then(setInsights)
       .catch((e) => { setInsights(null); setInsightError(e instanceof ApiError ? e.message : 'Gagal memuat analisis.') })
-  }, [filters, lag])
+  }, [filters, lag, section, reloadKey])
 
   const load = () => {
     setLoading(true); setError('')
@@ -301,161 +324,28 @@ export function AdminPage({ me, onLogout }: { me: Me; onLogout: () => void }) {
     }
   }, [data, filters])
 
-  const go = (id: string) => { setMobileMenu(false); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }) }
   const fmt1 = (v: number | null) => (v === null ? '–' : v.toFixed(1))
+  const reloadAll = () => { load(); if (section === 'kelayakan') loadFeasibility(); setReloadKey((k) => k + 1) }
+  const meta = SECTIONS.find((s) => s.id === section)!
+  const go = (id: Section) => { setMobileMenu(false); if (id !== section) window.location.hash = id; window.scrollTo(0, 0) }
 
-  return (
-    <div className="admin-shell">
-      <aside className={mobileMenu ? 'admin-sidebar open' : 'admin-sidebar'}>
-        <div className="sidebar-brand"><Brand /><button onClick={() => setMobileMenu(false)} aria-label="Tutup menu"><X size={19} /></button></div>
-        <p className="nav-label">RUANG KERJA</p>
-        <nav className="admin-nav">
-          <button onClick={() => go('ringkasan')}><LayoutDashboard size={19} /> Ringkasan</button>
-          <button onClick={() => go('kelola')}><UserPlus size={19} /> Kelola pasien</button>
-          <button onClick={() => go('kelayakan')}><Flag size={19} /> Kelayakan studi</button>
-          <button onClick={() => go('tren')}><Activity size={19} /> Tren & distribusi</button>
-          <button onClick={() => go('hubungan')}><GitCompareArrows size={19} /> Analisis hubungan</button>
-          <button onClick={() => go('partisipan')}><UsersRound size={19} /> Partisipan {view && <span>{view.patients.length}</span>}</button>
-          <button onClick={() => go('ekspor')}><Download size={19} /> Ekspor data</button>
-        </nav>
-        <div className="sidebar-study"><span><ShieldCheck size={18} /></span><p><strong>Studi feasibility</strong><small>Data pseudonim · hanya kode partisipan</small></p></div>
-        <button className="account-row" onClick={onLogout}><span className="avatar">{me.code.slice(0, 3)}</span><span><strong>{me.code}</strong><small>Peneliti · Keluar</small></span><LogOut size={17} /></button>
-      </aside>
-      {mobileMenu && <button className="sidebar-overlay" aria-label="Tutup menu" onClick={() => setMobileMenu(false)} />}
+  const kpis = view && (
+    <section className="kpi-grid" aria-busy={loading}>
+      <article className="kpi-card"><span className="kpi-icon teal"><UsersRound size={21} /></span><div><p>Partisipan</p><strong>{view.patients.length}</strong><span>{data!.summary.patientDays} hari-partisipan</span></div></article>
+      <article className="kpi-card"><span className="kpi-icon amber"><ClipboardCheck size={21} /></span><div><p>Hari terisi lengkap</p><strong>{Math.round(data!.summary.completionRate * 100)}%</strong><span>{data!.summary.fullyComplete} dari {data!.summary.patientDays} hari</span></div></article>
+      <article className="kpi-card"><span className="kpi-icon coral"><HeartPulse size={21} /></span><div><p>Rerata skor emosi (0 senang – 5 marah sekali)</p><strong>{fmt1(view.avgMood)} <small>/ 5</small></strong><span>{view.stressedTotal ? Math.round((view.stressedYes / view.stressedTotal) * 100) : 0}% check-in merasa stres (n = {view.moodTotal})</span></div></article>
+      <article className="kpi-card"><span className="kpi-icon blue"><MoonStar size={21} /></span><div><p>Rerata durasi tidur</p><strong>{fmt1(view.avgSleep)} <small>jam</small></strong><span>rerata dari rerata harian</span></div></article>
+    </section>
+  )
 
-      <main className="admin-main">
-        <header className="admin-topbar">
-          <button className="mobile-menu" onClick={() => setMobileMenu(true)} aria-label="Buka menu"><Menu size={21} /></button>
-          <div><h1>Dashboard peneliti</h1><p>{formatFullDate(today)}</p></div>
-          <div className="admin-actions">
-            <button className="icon-button" aria-label="Muat ulang" title="Muat ulang" onClick={() => { load(); loadFeasibility() }}><RefreshCw size={17} /></button>
-            <button className="icon-button" aria-label="Keluar" title="Keluar" onClick={onLogout}><LogOut size={17} /></button>
-          </div>
-        </header>
-        <div className="admin-content">
-          <section className="admin-welcome" id="ringkasan">
-            <div><p className="eyebrow">ANALITIK DESKRIPTIF</p><h2>Kelengkapan & tren pengisian</h2><p>{formatShortDate(filters.from)} – {formatShortDate(filters.to)}{filters.code ? ` · partisipan ${filters.code}` : ' · semua partisipan'}</p></div>
-            <form className="filter-row" onSubmit={apply}>
-              <select aria-label="Rentang cepat" value="" onChange={(e) => e.target.value && preset(Number(e.target.value))}>
-                <option value="">Rentang cepat…</option><option value="1">Hari ini</option><option value="7">7 hari terakhir</option><option value="14">14 hari terakhir</option><option value="30">30 hari terakhir</option>
-              </select>
-              <input type="date" aria-label="Dari tanggal" value={form.from} max={form.to} onChange={(e) => setForm({ ...form, from: e.target.value })} required />
-              <input type="date" aria-label="Sampai tanggal" value={form.to} min={form.from} onChange={(e) => setForm({ ...form, to: e.target.value })} required />
-              <input aria-label="Kode partisipan" placeholder="Kode, mis. P001" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
-              <button type="submit">Terapkan</button>
-            </form>
-          </section>
-
-          {error && <Notice kind="error">{error}</Notice>}
-          {!view ? (loading ? <Loading label="Memuat analitik…" /> : null) : (
-            <>
-              <section className="kpi-grid" aria-busy={loading}>
-                <article className="kpi-card"><span className="kpi-icon teal"><UsersRound size={21} /></span><div><p>Partisipan</p><strong>{view.patients.length}</strong><span>{data!.summary.patientDays} hari-partisipan</span></div></article>
-                <article className="kpi-card"><span className="kpi-icon amber"><ClipboardCheck size={21} /></span><div><p>Hari terisi lengkap</p><strong>{Math.round(data!.summary.completionRate * 100)}%</strong><span>{data!.summary.fullyComplete} dari {data!.summary.patientDays} hari</span></div></article>
-                <article className="kpi-card"><span className="kpi-icon coral"><HeartPulse size={21} /></span><div><p>Rerata skor emosi (0 senang – 5 marah sekali)</p><strong>{fmt1(view.avgMood)} <small>/ 5</small></strong><span>{view.stressedTotal ? Math.round((view.stressedYes / view.stressedTotal) * 100) : 0}% check-in merasa stres (n = {view.moodTotal})</span></div></article>
-                <article className="kpi-card"><span className="kpi-icon blue"><MoonStar size={21} /></span><div><p>Rerata durasi tidur</p><strong>{fmt1(view.avgSleep)} <small>jam</small></strong><span>rerata dari rerata harian</span></div></article>
-              </section>
-
-              {feasibility && <FeasibilityPanel data={feasibility} />}
-
-              <section className="analytics-grid" id="tren">
-                <article className="panel">
-                  <div className="panel-title"><div><h3>Tren termometer emosi harian</h3><p>Rerata skor 0 (senang) – 5 (marah sekali) · makin tinggi = emosi makin berat</p></div></div>
-                  <TrendChart label="Rerata skor termometer emosi per hari, 0 senang sampai 5 marah sekali" dates={view.dates} domain={[0, 5]} ticks={[0, 1, 2, 3, 4, 5]}
-                    series={[{ label: 'Skor emosi', color: MOOD_COLOR, values: view.moodSeries, format: (v) => `${v.toFixed(2)} (0–5)` }]} />
-                </article>
-                <article className="panel completion-panel">
-                  <div className="panel-title"><div><h3>Kelengkapan pengisian</h3><p>Per hari-partisipan (makan + perasaan + tidur)</p></div></div>
-                  <div className="donut" style={{ '--value': `${(view.complete / Math.max(1, data!.summary.patientDays)) * 100}%`, '--partial': `${((view.complete + view.partial) / Math.max(1, data!.summary.patientDays)) * 100}%` } as React.CSSProperties}>
-                    <div><strong>{Math.round(data!.summary.completionRate * 100)}%</strong><span>lengkap</span></div>
-                  </div>
-                  <div className="completion-list"><span><i className="done" /> Lengkap <strong>{view.complete}</strong></span><span><i className="partial" /> Sebagian <strong>{view.partial}</strong></span><span><i className="none" /> Kosong <strong>{view.empty}</strong></span></div>
-                </article>
-              </section>
-
-              <section className="analytics-grid">
-                <article className="panel">
-                  <div className="panel-title"><div><h3>Check-in yang merasa stres</h3><p>Persentase jawaban "Ya" per hari</p></div><span className="sample-size">{view.stressedYes} dari {view.stressedTotal}</span></div>
-                  <TrendChart label="Persentase check-in yang merasa stres per hari" dates={view.dates} domain={[0, 100]} ticks={[0, 25, 50, 75, 100]}
-                    series={[{ label: 'Merasa stres', color: STRESS_COLOR, values: view.stressSeries, format: (v) => `${v}%` }]} />
-                </article>
-                <article className="panel">
-                  <div className="panel-title"><div><h3>Kategori makanan</h3><p>Proporsi catatan makan</p></div><span className="sample-size">n = {view.categoryTotal}</span></div>
-                  <div className="bar-list">
-                    {view.categories.length === 0 && <p className="empty-text">Belum ada catatan makan.</p>}
-                    {view.categories.map((c) => {
-                      const pct = view.categoryTotal ? Math.round((c.count / view.categoryTotal) * 100) : 0
-                      return <div key={c.foodCategory}><span>{labelOf(foodCategories, c.foodCategory).replace(/ \(.*\)/, '')}</span><i><b style={{ width: `${pct}%` }} /></i><strong>{c.count} <small>({pct}%)</small></strong></div>
-                    })}
-                  </div>
-                </article>
-              </section>
-
-              <section className="panel distribution-panel">
-                <div className="panel-title"><div><h3>Distribusi termometer emosi</h3><p>Proporsi check-in pada rentang terpilih</p></div><span className="sample-size">n = {view.moodTotal}</span></div>
-                <ScaleDistribution options={moodOptions} counts={view.moodCounts} />
-              </section>
-              <section className="panel distribution-panel">
-                <div className="panel-title"><div><h3>Tren durasi tidur</h3><p>Rerata jam tidur per hari</p></div></div>
-                <TrendChart label="Rerata durasi tidur per hari dalam jam" dates={view.dates} domain={[0, 12]} ticks={[0, 3, 6, 9, 12]}
-                  series={[{ label: 'Tidur', color: SLEEP_COLOR, values: view.sleepSeries, format: (v) => `${v.toFixed(1)} jam` }]} />
-              </section>
-
-              <section className="panel relation-panel" id="hubungan">
-                <div className="panel-title">
-                  <div><h3>Analisis hubungan makanan, tidur, stres & mood</h3><p>{insights ? `${insights.patients} partisipan · ${insights.observedDays} hari tercatat${filters.code ? ` · analisis personal ${filters.code}` : ''}` : 'Memuat…'}</p></div>
-                  <div className="segmented" role="radiogroup" aria-label="Waktu efek makanan">
-                    <button type="button" role="radio" aria-checked={lag === 0} className={lag === 0 ? 'selected' : ''} onClick={() => setLag(0)}>Makanan: hari sama</button>
-                    <button type="button" role="radio" aria-checked={lag === 1} className={lag === 1 ? 'selected' : ''} onClick={() => setLag(1)}>Hari berikutnya</button>
-                  </div>
-                </div>
-                {insightError && <Notice kind="error">{insightError}</Notice>}
-                {insights && (() => {
-                  const clear = insights.findings.filter((f) => f.verdict === 'higher' || f.verdict === 'lower').sort((a, b) => (a.q ?? 1) - (b.q ?? 1))
-                  return (
-                    <>
-                      <div className="conclusions">
-                        <h4>Kesimpulan</h4>
-                        {clear.length ? <ol>{clear.map((f) => <li key={f.id}>{researchSentence(f)}</li>)}</ol>
-                          : <p>Belum ada hubungan yang lolos uji pada rentang ini. Perkiraan dan rentang ketidakpastiannya tetap ditampilkan di tabel bawah.</p>}
-                      </div>
-                      {filters.code && <div className="relation-timeline"><h4>Timeline {filters.code}</h4><LinkedTimeline dates={view.dates} days={insights.days} /></div>}
-                      <ForestTable title="Terhadap skor termometer emosi" caption="Perubahan skor emosi 0–5 (positif = emosi lebih berat), dibandingkan dengan hari lain pada orang yang sama" findings={insights.findings.filter((f) => f.outcome === 'mood')} />
-                      <ForestTable title="Terhadap stres" caption="Perubahan proporsi menjawab “Ya, stres” (poin persen)" findings={insights.findings.filter((f) => f.outcome === 'stressed')} />
-                      <p className="method-note">
-                        <strong>Metode.</strong> Setiap partisipan dibandingkan dengan dirinya sendiri (within-person), lalu dirata-rata antar partisipan.
-                        Interval kepercayaan 95% dari {filters.code ? 'bootstrap per hari' : 'cluster bootstrap per partisipan'} (2.000 iterasi); kesimpulan “terlihat” hanya bila CI tidak melewati 0
-                        dan lolos koreksi banyak perbandingan Benjamini–Hochberg (q &lt; 0,05). Minimal {filters.code ? '2' : '5'} hari per kelompok{filters.code ? '' : ' dan 3 partisipan'}.
-                        Ini asosiasi dari data observasional, bukan bukti sebab-akibat; perlu dikonfirmasi dengan analisis lanjutan (mis. model multilevel) pada data lebih besar.
-                      </p>
-                    </>
-                  )
-                })()}
-              </section>
-
-              <section className="panel patient-panel" id="partisipan">
-                <div className="panel-title"><div><h3>Kelengkapan per partisipan</h3><p>Jumlah hari yang terisi pada rentang terpilih</p></div></div>
-                <div className="table-wrap"><table>
-                  <thead><tr><th>Partisipan</th><th>Hari lengkap</th><th>Kelengkapan</th><th>Makan</th><th>Perasaan</th><th>Tidur</th><th>Status</th></tr></thead>
-                  <tbody>
-                    {view.patients.length === 0 && <tr><td colSpan={7}>Tidak ada partisipan yang cocok dengan filter.</td></tr>}
-                    {view.patients.map((p) => (
-                      <tr key={p.code}>
-                        <td><span className="table-avatar">{p.code.slice(0, 4)}</span><strong>{p.code}</strong></td>
-                        <td>{p.complete} / {p.days}</td>
-                        <td><div className="adherence"><span><i style={{ width: `${p.rate * 100}%` }} /></span>{Math.round(p.rate * 100)}%</div></td>
-                        <td>{p.meal} hari</td><td>{p.mood} hari</td><td>{p.sleep} hari</td>
-                        <td><span className={`status ${p.rate >= 0.8 ? 'good' : p.rate >= 0.5 ? 'warning' : 'neutral'}`}>{p.rate >= 0.8 ? 'Lengkap' : p.rate >= 0.5 ? 'Sebagian' : 'Perlu diingatkan'}</span></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table></div>
-              </section>
-            </>
-          )}
-
-          <PatientsPanel />
-
+  const renderSection = () => {
+    switch (section) {
+      case 'kelola':
+        return <PatientsPanel key={reloadKey} />
+      case 'kelayakan':
+        return feasibility ? <FeasibilityPanel data={feasibility} /> : <Loading label="Memuat metrik kelayakan…" />
+      case 'ekspor':
+        return (
           <section className="panel export-panel" id="ekspor">
             <div className="panel-title"><div><h3>Ekspor CSV</h3><p>Berisi <strong>seluruh</strong> data (tidak terpengaruh filter), hanya kode partisipan tanpa id internal. Untuk analisis, mulai dari <strong>daily_summary.csv</strong>: satu baris per partisipan per hari, termasuk hari yang kosong.</p></div></div>
             <div className="export-grid">
@@ -466,7 +356,175 @@ export function AdminPage({ me, onLogout }: { me: Me; onLogout: () => void }) {
               ))}
             </div>
           </section>
-          <p className="admin-footnote"><ShieldCheck size={15} /> Analitik bersifat deskriptif, bukan inferensi klinis.</p>
+        )
+    }
+    if (!view) return loading ? <Loading label="Memuat analitik…" /> : null
+    switch (section) {
+      case 'ringkasan':
+        return (
+          <>
+            {kpis}
+            <section className="analytics-grid">
+              <article className="panel">
+                <div className="panel-title"><div><h3>Tren termometer emosi harian</h3><p>Rerata skor 0 (senang) – 5 (marah sekali) · makin tinggi = emosi makin berat</p></div></div>
+                <TrendChart label="Rerata skor termometer emosi per hari, 0 senang sampai 5 marah sekali" dates={view.dates} domain={[0, 5]} ticks={[0, 1, 2, 3, 4, 5]}
+                  series={[{ label: 'Skor emosi', color: MOOD_COLOR, values: view.moodSeries, format: (v) => `${v.toFixed(2)} (0–5)` }]} />
+              </article>
+              <article className="panel completion-panel">
+                <div className="panel-title"><div><h3>Kelengkapan pengisian</h3><p>Per hari-partisipan (makan + perasaan + tidur)</p></div></div>
+                <div className="donut" style={{ '--value': `${(view.complete / Math.max(1, data!.summary.patientDays)) * 100}%`, '--partial': `${((view.complete + view.partial) / Math.max(1, data!.summary.patientDays)) * 100}%` } as React.CSSProperties}>
+                  <div><strong>{Math.round(data!.summary.completionRate * 100)}%</strong><span>lengkap</span></div>
+                </div>
+                <div className="completion-list"><span><i className="done" /> Lengkap <strong>{view.complete}</strong></span><span><i className="partial" /> Sebagian <strong>{view.partial}</strong></span><span><i className="none" /> Kosong <strong>{view.empty}</strong></span></div>
+              </article>
+            </section>
+            <div className="section-links">
+              {SECTIONS.filter((s) => s.id !== 'ringkasan').map((s) => (
+                <button key={s.id} type="button" onClick={() => go(s.id)}><s.icon size={18} /><span><strong>{s.label}</strong><small>{s.description}</small></span><ChevronRight size={16} /></button>
+              ))}
+            </div>
+          </>
+        )
+      case 'tren':
+        return (
+          <>
+            <section className="analytics-grid first">
+              <article className="panel">
+                <div className="panel-title"><div><h3>Check-in yang merasa stres</h3><p>Persentase jawaban "Ya" per hari</p></div><span className="sample-size">{view.stressedYes} dari {view.stressedTotal}</span></div>
+                <TrendChart label="Persentase check-in yang merasa stres per hari" dates={view.dates} domain={[0, 100]} ticks={[0, 25, 50, 75, 100]}
+                  series={[{ label: 'Merasa stres', color: STRESS_COLOR, values: view.stressSeries, format: (v) => `${v}%` }]} />
+              </article>
+              <article className="panel">
+                <div className="panel-title"><div><h3>Kategori makanan</h3><p>Proporsi catatan makan</p></div><span className="sample-size">n = {view.categoryTotal}</span></div>
+                <div className="bar-list">
+                  {view.categories.length === 0 && <p className="empty-text">Belum ada catatan makan.</p>}
+                  {view.categories.map((c) => {
+                    const pct = view.categoryTotal ? Math.round((c.count / view.categoryTotal) * 100) : 0
+                    return <div key={c.foodCategory}><span>{labelOf(foodCategories, c.foodCategory).replace(/ \(.*\)/, '')}</span><i><b style={{ width: `${pct}%` }} /></i><strong>{c.count} <small>({pct}%)</small></strong></div>
+                  })}
+                </div>
+              </article>
+            </section>
+            <section className="panel distribution-panel">
+              <div className="panel-title"><div><h3>Distribusi termometer emosi</h3><p>Proporsi check-in pada rentang terpilih</p></div><span className="sample-size">n = {view.moodTotal}</span></div>
+              <ScaleDistribution options={moodOptions} counts={view.moodCounts} />
+            </section>
+            <section className="panel distribution-panel">
+              <div className="panel-title"><div><h3>Tren durasi tidur</h3><p>Rerata jam tidur per hari</p></div></div>
+              <TrendChart label="Rerata durasi tidur per hari dalam jam" dates={view.dates} domain={[0, 12]} ticks={[0, 3, 6, 9, 12]}
+                series={[{ label: 'Tidur', color: SLEEP_COLOR, values: view.sleepSeries, format: (v) => `${v.toFixed(1)} jam` }]} />
+            </section>
+          </>
+        )
+      case 'hubungan':
+        return (
+          <section className="panel relation-panel" id="hubungan">
+            <div className="panel-title">
+              <div><h3>Analisis hubungan makanan, tidur, stres & mood</h3><p>{insights ? `${insights.patients} partisipan · ${insights.observedDays} hari tercatat${filters.code ? ` · analisis personal ${filters.code}` : ''}` : 'Menghitung…'}</p></div>
+              <div className="segmented" role="radiogroup" aria-label="Waktu efek makanan">
+                <button type="button" role="radio" aria-checked={lag === 0} className={lag === 0 ? 'selected' : ''} onClick={() => setLag(0)}>Makanan: hari sama</button>
+                <button type="button" role="radio" aria-checked={lag === 1} className={lag === 1 ? 'selected' : ''} onClick={() => setLag(1)}>Hari berikutnya</button>
+              </div>
+            </div>
+            {insightError && <Notice kind="error">{insightError}</Notice>}
+            {!insights && !insightError && <Loading label="Menghitung analisis hubungan…" />}
+            {insights && (() => {
+              const clear = insights.findings.filter((f) => f.verdict === 'higher' || f.verdict === 'lower').sort((a, b) => (a.q ?? 1) - (b.q ?? 1))
+              return (
+                <>
+                  <div className="conclusions">
+                    <h4>Kesimpulan</h4>
+                    {clear.length ? <ol>{clear.map((f) => <li key={f.id}>{researchSentence(f)}</li>)}</ol>
+                      : <p>Belum ada hubungan yang lolos uji pada rentang ini. Perkiraan dan rentang ketidakpastiannya tetap ditampilkan di tabel bawah.</p>}
+                  </div>
+                  {filters.code && <div className="relation-timeline"><h4>Timeline {filters.code}</h4><LinkedTimeline dates={view.dates} days={insights.days} /></div>}
+                  <ForestTable title="Terhadap skor termometer emosi" caption="Perubahan skor emosi 0–5 (positif = emosi lebih berat), dibandingkan dengan hari lain pada orang yang sama" findings={insights.findings.filter((f) => f.outcome === 'mood')} />
+                  <ForestTable title="Terhadap stres" caption="Perubahan proporsi menjawab “Ya, stres” (poin persen)" findings={insights.findings.filter((f) => f.outcome === 'stressed')} />
+                  <p className="method-note">
+                    <strong>Metode.</strong> Setiap partisipan dibandingkan dengan dirinya sendiri (within-person), lalu dirata-rata antar partisipan.
+                    Interval kepercayaan 95% dari {filters.code ? 'bootstrap per hari' : 'cluster bootstrap per partisipan'} (2.000 iterasi); kesimpulan “terlihat” hanya bila CI tidak melewati 0
+                    dan lolos koreksi banyak perbandingan Benjamini–Hochberg (q &lt; 0,05). Minimal {filters.code ? '2' : '5'} hari per kelompok{filters.code ? '' : ' dan 3 partisipan'}.
+                    Ini asosiasi dari data observasional, bukan bukti sebab-akibat; perlu dikonfirmasi dengan analisis lanjutan (mis. model multilevel) pada data lebih besar.
+                  </p>
+                </>
+              )
+            })()}
+          </section>
+        )
+      case 'partisipan':
+        return (
+          <section className="panel patient-panel" id="partisipan">
+            <div className="panel-title"><div><h3>Kelengkapan per partisipan</h3><p>Jumlah hari yang terisi pada rentang terpilih</p></div></div>
+            <div className="table-wrap"><table>
+              <thead><tr><th>Partisipan</th><th>Hari lengkap</th><th>Kelengkapan</th><th>Makan</th><th>Perasaan</th><th>Tidur</th><th>Status</th></tr></thead>
+              <tbody>
+                {view.patients.length === 0 && <tr><td colSpan={7}>Tidak ada partisipan yang cocok dengan filter.</td></tr>}
+                {view.patients.map((p) => (
+                  <tr key={p.code}>
+                    <td><span className="table-avatar">{p.code.slice(0, 4)}</span><strong>{p.code}</strong></td>
+                    <td>{p.complete} / {p.days}</td>
+                    <td><div className="adherence"><span><i style={{ width: `${p.rate * 100}%` }} /></span>{Math.round(p.rate * 100)}%</div></td>
+                    <td>{p.meal} hari</td><td>{p.mood} hari</td><td>{p.sleep} hari</td>
+                    <td><span className={`status ${p.rate >= 0.8 ? 'good' : p.rate >= 0.5 ? 'warning' : 'neutral'}`}>{p.rate >= 0.8 ? 'Lengkap' : p.rate >= 0.5 ? 'Sebagian' : 'Perlu diingatkan'}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table></div>
+          </section>
+        )
+    }
+    return null
+  }
+
+  return (
+    <div className="admin-shell">
+      <aside className={mobileMenu ? 'admin-sidebar open' : 'admin-sidebar'}>
+        <div className="sidebar-brand"><Brand /><button onClick={() => setMobileMenu(false)} aria-label="Tutup menu"><X size={19} /></button></div>
+        <p className="nav-label">RUANG KERJA</p>
+        <nav className="admin-nav">
+          {SECTIONS.map((s) => (
+            <button key={s.id} className={section === s.id ? 'active' : ''} aria-current={section === s.id ? 'page' : undefined} onClick={() => go(s.id)}>
+              <s.icon size={19} /> {s.label}{s.id === 'partisipan' && view && <span>{view.patients.length}</span>}
+            </button>
+          ))}
+        </nav>
+        <div className="sidebar-study"><span><ShieldCheck size={18} /></span><p><strong>Studi feasibility</strong><small>Data pseudonim · hanya kode partisipan</small></p></div>
+        <button className="account-row" onClick={onLogout}><span className="avatar">{me.code.slice(0, 3)}</span><span><strong>{me.code}</strong><small>Peneliti · Keluar</small></span><LogOut size={17} /></button>
+      </aside>
+      {mobileMenu && <button className="sidebar-overlay" aria-label="Tutup menu" onClick={() => setMobileMenu(false)} />}
+
+      <main className="admin-main">
+        <header className="admin-topbar">
+          <button className="mobile-menu" onClick={() => setMobileMenu(true)} aria-label="Buka menu"><Menu size={21} /></button>
+          <div><h1>{meta.label}</h1><p>Dashboard peneliti · {formatFullDate(today)}</p></div>
+          <div className="admin-actions">
+            <button className="icon-button" aria-label="Muat ulang" title="Muat ulang" onClick={reloadAll}><RefreshCw size={17} /></button>
+            <button className="icon-button" aria-label="Keluar" title="Keluar" onClick={onLogout}><LogOut size={17} /></button>
+          </div>
+        </header>
+        <div className="admin-content">
+          <section className="admin-welcome">
+            <div>
+              <p className="eyebrow">{meta.eyebrow}</p>
+              <h2>{meta.label}</h2>
+              <p>{meta.usesFilters ? `${formatShortDate(filters.from)} – ${formatShortDate(filters.to)}${filters.code ? ` · partisipan ${filters.code}` : ' · semua partisipan'}` : meta.description}</p>
+            </div>
+            {meta.usesFilters && (
+              <form className="filter-row" onSubmit={apply}>
+                <select aria-label="Rentang cepat" value="" onChange={(e) => e.target.value && preset(Number(e.target.value))}>
+                  <option value="">Rentang cepat…</option><option value="1">Hari ini</option><option value="7">7 hari terakhir</option><option value="14">14 hari terakhir</option><option value="30">30 hari terakhir</option>
+                </select>
+                <input type="date" aria-label="Dari tanggal" value={form.from} max={form.to} onChange={(e) => setForm({ ...form, from: e.target.value })} required />
+                <input type="date" aria-label="Sampai tanggal" value={form.to} min={form.from} onChange={(e) => setForm({ ...form, to: e.target.value })} required />
+                <input aria-label="Kode partisipan" placeholder="Kode, mis. P001" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
+                <button type="submit">Terapkan</button>
+              </form>
+            )}
+          </section>
+
+          {meta.usesFilters && error && <Notice kind="error">{error}</Notice>}
+          {renderSection()}
+          {meta.usesFilters && <p className="admin-footnote"><ShieldCheck size={15} /> Analitik bersifat deskriptif, bukan inferensi klinis.</p>}
         </div>
       </main>
     </div>
