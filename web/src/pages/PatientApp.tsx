@@ -210,7 +210,7 @@ function MoodForm({ date, day, onSaved, onCancel }: { date: string; day: DayData
     <form className="form-page" {...submit.track} onSubmit={(e) => submit.run(e, 'Perasaan & stres tersimpan.')} noValidate>
       <section className="form-card intro-card">
         <span className="form-card-icon coral"><HeartPulse size={22} /></span>
-        <div><p className="step-label">PERASAAN & STRES</p><h2>Bagaimana perasaanmu?</h2><p>Tidak ada jawaban benar atau salah. Pilih yang paling mendekati.</p></div>
+        <div><p className="step-label">PERASAAN & STRES</p><h2>Catat perasaanmu hari ini</h2><p>Tidak ada jawaban benar atau salah. Pilih yang paling mendekati.</p></div>
       </section>
       <section className="form-card">
         <MoodThermometer value={mood} onChange={setMood} />

@@ -118,10 +118,8 @@ h1, h2, h3, .brand { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
 td { font-size: 11px; }th { font-size: 10px; }
 
 /* Mood thermometer (Termometer Emosi) */
-.emo { --face: 40px; --arrow: 12px; --gap: 5px; --band: 66px; --tube: 54px; --strip: 15px; --ink: #1d1d1f; margin: 2px 0 18px; }
-.emo-title { text-align: center; margin-bottom: 12px; }
-.emo-title span { display: inline-block; background: #2b3a8f; color: white; border-radius: 8px; padding: 3px 10px; font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; }
-.emo-title strong { display: block; margin-top: 4px; font-family: 'Plus Jakarta Sans'; font-size: clamp(17px, 5.6vw, 22px); letter-spacing: .5px; text-transform: uppercase; color: var(--ink); }
+.emo { --face: 40px; --arrow: 12px; --gap: 5px; --band: 66px; --tube: 54px; --ink: #1d1d1f; margin: 2px 0 18px; }
+.emo-title { text-align: center; margin: 0 0 14px; font-family: 'Plus Jakarta Sans'; font-size: clamp(17px, 5.4vw, 21px); color: var(--ink); }
 .emo-scale { position: relative; display: grid; }
 .emo-row { display: grid; grid-template-columns: var(--face) var(--arrow) var(--band) var(--arrow) 1fr; column-gap: var(--gap); align-items: center; border: 0; background: transparent; padding: 0 8px 0 0; text-align: left; min-height: 66px; border-radius: 14px; position: relative; }
 .emo-row.selected { background: color-mix(in srgb, var(--c) 12%, white); box-shadow: inset 0 0 0 2px var(--c); }
@@ -130,7 +128,7 @@ td { font-size: 11px; }th { font-size: 10px; }
 .emo-arrow { height: 2px; background: #8d8d8d; position: relative; }
 .emo-arrow::after { content: ''; position: absolute; right: -1px; top: -3px; border: 4px solid transparent; border-left: 6px solid #8d8d8d; border-right: 0; }
 .emo-arrow.to-left::after { right: auto; left: -1px; border-left: 0; border-right: 6px solid #8d8d8d; }
-.emo-band { align-self: stretch; justify-self: center; width: var(--tube); background: var(--c); border-left: 3px solid var(--ink); border-right: 3px solid var(--ink); display: flex; align-items: center; justify-content: flex-end; padding-right: 7px; }
+.emo-band { align-self: stretch; justify-self: center; width: var(--tube); background: var(--c); border-left: 3px solid var(--ink); border-right: 3px solid var(--ink); display: flex; align-items: center; justify-content: center; }
 .emo-band b { color: white; font-family: 'Plus Jakarta Sans'; font-size: 22px; font-weight: 600; line-height: 1; text-shadow: 0 1px 2px rgba(0,0,0,.3); }
 .level-5 .emo-band { border-top: 3px solid var(--ink); border-radius: 21px 21px 0 0; padding-top: 6px; }
 .level-0 { min-height: 74px; }
@@ -139,9 +137,8 @@ td { font-size: 11px; }th { font-size: 10px; }
 .emo-row.selected .emo-band b { font-size: 26px; font-weight: 800; }
 .emo-text strong { display: block; font-family: 'Plus Jakarta Sans'; font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: .3px; color: var(--c); line-height: 1.15; }
 .emo-text small { display: block; margin-top: 2px; font-size: 11px; line-height: 1.35; color: #3b3b3d; }
-.emo-okay { position: absolute; top: 14px; bottom: 82px; left: calc(var(--face) + var(--arrow) + var(--gap) * 2 + (var(--band) - var(--tube)) / 2 + 7px); width: var(--strip); background: white; color: var(--ink); writing-mode: vertical-rl; transform: rotate(180deg); text-align: center; font-size: 9px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; pointer-events: none; display: flex; align-items: center; justify-content: center; }
 .emo-support { margin-top: 12px; background: #fdf0ec; border: 1px solid #f3cfc3; color: #7d2f1f; border-radius: 12px; padding: 10px 12px; font-size: 12px; line-height: 1.5; }
-@media (max-width: 380px) { .emo { --face: 34px; --arrow: 8px; --gap: 4px; --band: 58px; --tube: 48px; --strip: 13px; } .emo-band b { font-size: 19px; } .emo-okay { font-size: 8px; } .emo-face svg { width: 32px; height: 32px; } .emo-text strong { font-size: 13px; } .emo-text small { font-size: 10px; } }
+@media (max-width: 380px) { .emo { --face: 34px; --arrow: 8px; --gap: 4px; --band: 58px; --tube: 48px; } .emo-band b { font-size: 19px; } .emo-face svg { width: 32px; height: 32px; } .emo-text strong { font-size: 13px; } .emo-text small { font-size: 10px; } }
 
 /* Linked timeline (Riwayat pasien & dashboard peneliti) */
 .timeline { margin-top: 8px; }

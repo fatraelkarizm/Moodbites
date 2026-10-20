@@ -26,7 +26,7 @@ Di halaman **Hari ini** ada lingkaran yang menunjukkan berapa catatan yang sudah
 | Catatan | Isi | Kapan |
 |---|---|---|
 | **Makan** | Waktu makan (sarapan, makan siang, makan malam, camilan), jam, nama makanan, **kategori**, porsi, jumlah sajian, dan seberapa besar kamu memperhatikan apa yang kamu makan dan rasakan (1–5) | Setiap kali selesai makan |
-| **Perasaan & stres** | Pilih posisimu di **Termometer Emosi**: 0 senang, 1 baik, 2 cemas, 3 sedih, 4 kesal, 5 marah sekali. Semua emosi itu wajar, ceritakan perasaanmu hari ini (opsional), lalu jawab apakah kamu sedang stres. Bila *Ya*, tulis penyebabnya | Sekali sehari |
+| **Perasaan & stres** | Pilih posisimu di **Termometer Emosi**: 0 senang, 1 baik, 2 cemas, 3 sedih, 4 kesal, 5 marah sekali. Ceritakan perasaanmu hari ini (opsional), lalu jawab apakah kamu sedang stres. Bila *Ya*, tulis penyebabnya | Sekali sehari |
 | **Tidur** | Lama tidur (jam), kualitas tidur 1–5 (sangat buruk, buruk, cukup, baik, sangat baik), hambatan tidur (opsional) | Pagi hari, untuk tidur semalam |
 
 Tekan tombol **+ Catat** di bawah layar untuk mulai, lalu pilih tab **Perasaan**, **Makan**, atau **Tidur**.

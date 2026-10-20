@@ -71,7 +71,7 @@ export function MoodThermometer({ value, onChange }: { value?: number | undefine
   const selected = moodOptions.find((o) => o.value === value)
   return (
     <div className="emo">
-      <div className="emo-title"><span>Di mana posisimu di</span><strong>Termometer Emosi?</strong></div>
+      <h3 className="emo-title">Bagaimana perasaanmu saat ini?</h3>
       <div className="emo-scale" role="radiogroup" aria-label="Termometer emosi, 0 senang sampai 5 marah sekali">
         {levels.map((o) => (
           <button
@@ -91,7 +91,6 @@ export function MoodThermometer({ value, onChange }: { value?: number | undefine
             <span className="emo-text"><strong>{o.label}</strong><small>{o.description}</small></span>
           </button>
         ))}
-        <span className="emo-okay" aria-hidden>Semua emosi itu wajar!</span>
       </div>
       {selected && selected.value >= 4 && (
         <p className="emo-support" role="status">
