@@ -9,8 +9,9 @@
     "start": "node dist/src/server.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "tsx --test test/**/*.test.ts",
-    "create-account": "tsx --env-file=.env scripts/create-account.ts",
-    "seed-demo": "tsx --env-file=.env scripts/seed-demo.ts"
+    "create-account": "tsx --env-file-if-exists=.env scripts/create-account.ts",
+    "seed-demo": "tsx --env-file-if-exists=.env scripts/seed-demo.ts",
+    "migrate": "tsx --env-file-if-exists=.env scripts/migrate.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",

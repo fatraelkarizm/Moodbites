@@ -58,7 +58,16 @@ npm run seed-demo --prefix api -- --clear # hapus
 
 `PATIENT_INSIGHTS=true|false` di `api/.env` mengatur apakah pasien melihat timeline dan pola pribadi di halaman Riwayat.
 
-## Verifikasi
+## Deploy (VPS)
+
+Server: Node.js 22, PostgreSQL, nginx, certbot. Kode di `/opt/moodbite` (user sistem `moodbite`), frontend di `/var/www/moodbite`, API di `127.0.0.1:3100` lewat systemd `moodbite-api`.
+
+- `/etc/moodbite/api.env` (root, chmod 600): `DATABASE_URL` role `moodbite_app`, `PORT=3100`, `NODE_ENV=production`, `APP_ORIGIN=https://<domain>`, `PATIENT_INSIGHTS`.
+- `/etc/moodbite/migrate.env` (root, chmod 600): `MIGRATION_DATABASE_URL` role owner, hanya untuk migrasi dan pembuatan akun.
+- Site nginx dari `deploy/nginx.conf` (ganti `__DOMAIN__`), lalu `sudo certbot --nginx -d <domain> --redirect`.
+- Update berikutnya: `bash /opt/moodbite/deploy/update.sh` (pull, build, migrasi baru via `npm run migrate`, restart).
+
+
 
 ```bash
 npm test

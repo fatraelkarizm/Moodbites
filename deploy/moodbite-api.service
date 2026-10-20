@@ -15,7 +15,6 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectHome=true
 ProtectSystem=strict
-ReadWritePaths=/var/log/moodbite
 
 [Install]
 WantedBy=multi-user.target
