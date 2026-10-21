@@ -9,6 +9,7 @@ import { analyticsRoutes } from './routes/analytics.js';
 import { insightRoutes } from './routes/insights.js';
 import { feasibilityRoutes } from './routes/feasibility.js';
 import { patientRoutes } from './routes/patients.js';
+import { consentRoutes } from './routes/consent.js';
 import { historyRoutes } from './routes/history.js';
 import { mealRoutes } from './routes/meals.js';
 import { moodRoutes } from './routes/moods.js';
@@ -32,9 +33,9 @@ export async function buildApp(){
   });
   app.get('/api/health',async()=>{await pool.query('select 1');return {status:'ok'};});
   app.get('/api/me',{preHandler:authenticate},async(request)=>withAccount(request.account,async(c)=>{
-    const r=await c.query(`select a.code,a.role,exists(select 1 from patient_profiles p where p.patient_id=a.id) as "onboardingComplete" from accounts a where a.id=$1`,[request.account.id]);return {...r.rows[0],insightsEnabled:config.PATIENT_INSIGHTS};
+    const r=await c.query(`select a.code,a.role,exists(select 1 from patient_profiles p where p.patient_id=a.id) as "onboardingComplete",exists(select 1 from consents k where k.patient_id=a.id) as "consentGiven" from accounts a where a.id=$1`,[request.account.id]);return {...r.rows[0],insightsEnabled:config.PATIENT_INSIGHTS};
   }));
-  await registerAuthRoutes(app); await profileRoutes(app); await mealRoutes(app); await moodRoutes(app); await sleepRoutes(app); await historyRoutes(app); await analyticsRoutes(app); await insightRoutes(app); await feasibilityRoutes(app); await patientRoutes(app); await exportRoutes(app);
+  await registerAuthRoutes(app); await profileRoutes(app); await mealRoutes(app); await moodRoutes(app); await sleepRoutes(app); await historyRoutes(app); await analyticsRoutes(app); await insightRoutes(app); await feasibilityRoutes(app); await patientRoutes(app); await consentRoutes(app); await exportRoutes(app);
   return app;
 }
 

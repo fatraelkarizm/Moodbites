@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react'
-import { ClipboardCheck, Gauge, UserRound } from 'lucide-react'
-import { Field, Loading, Notice, Select, ToggleQuestion } from '../components'
+import { ChevronRight, ClipboardCheck, Gauge, UserRound } from 'lucide-react'
+import { Field, Loading, Notice, OnboardingSteps, Select, ToggleQuestion } from '../components'
 import {
   adherenceOptions, alcoholOptions, artStatusOptions, cd4Options, educationOptions, incomeOptions,
   maritalOptions, sexOptions, smokingOptions, viralLoadOptions,
@@ -30,13 +30,23 @@ const fromProfile = (p: Profile): Draft => ({
 const optNum = (v: string) => (v.trim() === '' ? null : Number(v))
 const optText = <T extends string>(v: T | '') => (v === '' ? null : v)
 
-function toProfile(d: Draft): Profile | string {
-  const required: Array<[keyof Draft, string]> = [
+const DEMOGRAPHIC_FIELDS: Array<[keyof Draft, string]> = [
     ['age', 'usia'], ['sex', 'jenis kelamin'], ['heightCm', 'tinggi badan'], ['weightKg', 'berat badan'],
     ['education', 'pendidikan'], ['maritalStatus', 'status pernikahan'], ['occupation', 'pekerjaan'],
-    ['incomeGroup', 'pendapatan'], ['diagnosisDurationMonths', 'lama sejak diagnosis'],
-  ]
-  const missing = required.filter(([k]) => String(d[k] ?? '').trim() === '').map(([, label]) => label)
+    ['incomeGroup', 'pendapatan'],
+]
+
+const missingLabels = (d: Draft, fields: Array<[keyof Draft, string]>) =>
+  fields.filter(([k]) => String(d[k] ?? '').trim() === '').map(([, label]) => label)
+
+/** Validasi langkah "Data diri awal". */
+function checkDemographics(d: Draft): string | null {
+  const missing = missingLabels(d, DEMOGRAPHIC_FIELDS)
+  return missing.length ? `Lengkapi: ${missing.join(', ')}.` : null
+}
+
+function toProfile(d: Draft): Profile | string {
+  const missing = missingLabels(d, [...DEMOGRAPHIC_FIELDS, ['diagnosisDurationMonths', 'lama sejak diagnosis']])
   if (missing.length) return `Lengkapi: ${missing.join(', ')}.`
   if (d.hasComplications === undefined) return 'Jawab pertanyaan tentang komplikasi.'
   if (d.hasTreatmentSideEffects === undefined) return 'Jawab pertanyaan tentang efek samping pengobatan.'
@@ -72,6 +82,8 @@ export function ProfileForm({ onboarding = false, onSaved, onCancel }: { onboard
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
   const [busy, setBusy] = useState(false)
+  // Onboarding dibagi dua langkah; saat mengedit profil semua bagian tampil sekaligus.
+  const [step, setStep] = useState<'basic' | 'health'>('basic')
 
   useEffect(() => {
     if (onboarding) return
@@ -87,8 +99,17 @@ export function ProfileForm({ onboarding = false, onSaved, onCancel }: { onboard
   if (!draft) return <Loading label="Memuat profil…" />
   const set = (patch: Partial<Draft>) => { setDraft({ ...draft, ...patch }); setSaved(false) }
 
+  const showBasic = !onboarding || step === 'basic'
+  const showHealth = !onboarding || step === 'health'
+
   const submit = async (event: FormEvent) => {
     event.preventDefault()
+    if (onboarding && step === 'basic') {
+      const problem = checkDemographics(draft)
+      if (problem) { setError(problem); return }
+      setError(''); setStep('health'); window.scrollTo(0, 0)
+      return
+    }
     const profile = toProfile(draft)
     if (typeof profile === 'string') { setError(profile); return }
     setError(''); setBusy(true)
@@ -103,15 +124,16 @@ export function ProfileForm({ onboarding = false, onSaved, onCancel }: { onboard
 
   return (
     <form className="form-page" onSubmit={submit} noValidate>
+      {onboarding && <OnboardingSteps current={step === 'basic' ? 2 : 3} />}
       <section className="form-card intro-card">
         <span className="form-card-icon green"><UserRound size={22} /></span>
         <div>
-          <p className="step-label">{onboarding ? 'LANGKAH PERTAMA' : 'DATA DEMOGRAFI'}</p>
-          <h2>{onboarding ? 'Isi profil awal' : 'Profil kesehatanmu'}</h2>
-          <p>{onboarding ? 'Cukup sekali di awal. Setelah itu kamu bisa mulai mencatat harian.' : 'Perbarui bila ada perubahan.'}</p>
+          <p className="step-label">{!onboarding ? 'DATA DEMOGRAFI' : step === 'basic' ? 'LANGKAH 2 DARI 3' : 'LANGKAH 3 DARI 3'}</p>
+          <h2>{!onboarding ? 'Profil kesehatanmu' : step === 'basic' ? 'Data diri awal' : 'Profil kesehatan lanjutan'}</h2>
+          <p>{!onboarding ? 'Perbarui bila ada perubahan.' : step === 'basic' ? 'Data dasar tentang dirimu. Cukup diisi sekali di awal.' : 'Sedikit lagi. Setelah ini kamu bisa mulai mencatat harian.'}</p>
         </div>
       </section>
-      <section className="form-card profile-grid">
+      {showBasic && <section className="form-card profile-grid">
         <Field label="Usia"><div className="number-input"><input type="number" inputMode="numeric" min="10" max="120" value={draft.age} onChange={(e) => set({ age: e.target.value })} required /><span>tahun</span></div></Field>
         <Field label="Jenis kelamin"><Select required value={draft.sex} options={sexOptions} onChange={(sex) => set({ sex })} /></Field>
         <Field label="Tinggi badan"><div className="number-input"><input type="number" inputMode="decimal" min="80" max="250" value={draft.heightCm} onChange={(e) => set({ heightCm: e.target.value })} required /><span>cm</span></div></Field>
@@ -121,9 +143,10 @@ export function ProfileForm({ onboarding = false, onSaved, onCancel }: { onboard
         <Field label="Status pernikahan"><Select required value={draft.maritalStatus} options={maritalOptions} onChange={(maritalStatus) => set({ maritalStatus })} /></Field>
         <Field label="Pekerjaan"><input value={draft.occupation} maxLength={150} onChange={(e) => set({ occupation: e.target.value })} placeholder="Contoh: wiraswasta" required /></Field>
         <Field label="Pendapatan per bulan"><Select required value={draft.incomeGroup} options={incomeOptions} onChange={(incomeGroup) => set({ incomeGroup })} /></Field>
-        <Field label="Lama sejak diagnosis"><div className="number-input"><input type="number" inputMode="decimal" min="0" max="120" step="0.5" value={draft.diagnosisDurationMonths} onChange={(e) => set({ diagnosisDurationMonths: e.target.value })} required /><span>tahun</span></div></Field>
-      </section>
+      </section>}
+      {showHealth && <>
       <section className="form-card field-stack">
+        <Field label="Lama sejak diagnosis"><div className="number-input"><input type="number" inputMode="decimal" min="0" max="120" step="0.5" value={draft.diagnosisDurationMonths} onChange={(e) => set({ diagnosisDurationMonths: e.target.value })} required /><span>tahun</span></div></Field>
         <ToggleQuestion label="Apakah kamu memiliki komplikasi?" value={draft.hasComplications} onChange={(hasComplications) => set({ hasComplications, complications: hasComplications ? draft.complications : '' })} />
         {draft.hasComplications && <Field label="Tuliskan komplikasi yang dimiliki"><textarea rows={3} maxLength={1000} value={draft.complications} onChange={(e) => set({ complications: e.target.value })} /></Field>}
         <ToggleQuestion label="Apakah ada efek samping pengobatan?" value={draft.hasTreatmentSideEffects} onChange={(hasTreatmentSideEffects) => set({ hasTreatmentSideEffects, treatmentSideEffects: hasTreatmentSideEffects ? draft.treatmentSideEffects : '' })} />
@@ -148,11 +171,15 @@ export function ProfileForm({ onboarding = false, onSaved, onCancel }: { onboard
           <Field label="Konsumsi alkohol"><Select value={draft.alcohol} options={alcoholOptions} placeholder="Tidak diisi" onChange={(alcohol) => set({ alcohol })} /></Field>
         </div>
       </section>
+      </>}
       {error && <Notice kind="error">{error}</Notice>}
       {saved && !onboarding && <Notice kind="success">Profil tersimpan.</Notice>}
       <div className="save-bar">
         {onCancel && <button type="button" className="secondary-button" onClick={onCancel}>Kembali</button>}
-        <button className="primary-button" type="submit" disabled={busy}><ClipboardCheck size={18} /> {busy ? 'Menyimpan…' : onboarding ? 'Simpan & mulai' : 'Simpan profil'}</button>
+        {onboarding && step === 'health' && <button type="button" className="secondary-button" onClick={() => { setError(''); setStep('basic'); window.scrollTo(0, 0) }}>Kembali</button>}
+        <button className="primary-button" type="submit" disabled={busy}>
+          {onboarding && step === 'basic' ? <>Lanjut <ChevronRight size={18} /></> : <><ClipboardCheck size={18} /> {busy ? 'Menyimpan…' : onboarding ? 'Simpan & mulai' : 'Simpan profil'}</>}
+        </button>
       </div>
     </form>
   )

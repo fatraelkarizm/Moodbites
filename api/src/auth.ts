@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { verify } from '@node-rs/argon2';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
-import { pool, type Role } from './db.js';
+import { pool, withAccount, type Role } from './db.js';
 import { loadConfig } from './config.js';
 import { sha256 } from './lib.js';
 
@@ -27,8 +27,18 @@ export async function authenticate(request: FastifyRequest, reply: FastifyReply)
   request.account = account;
 }
 
+/** Hanya memeriksa peran; dipakai oleh rute persetujuan itu sendiri. */
+export async function patientRole(request: FastifyRequest, reply: FastifyReply): Promise<void> {
+  if (request.account.role !== 'patient') return reply.code(403).send({ error: 'Khusus akun pasien' });
+}
+
+/** Peran pasien, dan data hanya boleh direkam setelah pasien memberi persetujuan penelitian. */
 export async function patientOnly(request: FastifyRequest, reply: FastifyReply): Promise<void> {
   if (request.account.role !== 'patient') return reply.code(403).send({ error: 'Khusus akun pasien' });
+  if (request.method === 'GET') return;
+  const consented = await withAccount(request.account, async (c) =>
+    (await c.query('select 1 from consents where patient_id = $1', [request.account.id])).rowCount === 1);
+  if (!consented) return reply.code(403).send({ error: 'Berikan persetujuan penelitian terlebih dahulu' });
 }
 
 export async function researcherOnly(request: FastifyRequest, reply: FastifyReply): Promise<void> {

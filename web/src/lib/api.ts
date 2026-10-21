@@ -2,7 +2,7 @@ export type Role = 'patient' | 'researcher'
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 export type FoodCategory = 'karbo' | 'gorengan' | 'manis' | 'sayur_buah' | 'protein' | 'minuman_manis' | 'lainnya'
 
-export interface Me { code: string; role: Role; onboardingComplete: boolean; insightsEnabled: boolean }
+export interface Me { code: string; role: Role; onboardingComplete: boolean; consentGiven: boolean; insightsEnabled: boolean }
 
 export interface Meal {
   id: string
@@ -185,6 +185,7 @@ export const api = {
   login: (code: string, pin: string) => request<{ role: Role }>('/auth/login', { method: 'POST', body: { code, pin } }),
   logout: () => request<void>('/auth/logout', { method: 'POST' }),
   me: () => request<Me>('/me'),
+  giveConsent: () => request<unknown>('/consent', { method: 'POST', body: { researchConsent: true, dataConsent: true } }),
 
   async getProfile(): Promise<Profile | null> {
     try { return toProfile(await request<Profile>('/profile')) } catch (error) {

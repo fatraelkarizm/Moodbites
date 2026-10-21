@@ -58,6 +58,7 @@ try {
     for (let p = 1; p <= 15; p++) {
       const code = `DEMO${String(p).padStart(2, '0')}`;
       const { rows: [acc] } = await client.query<{ id: string }>('insert into accounts(code,pin_hash,role) values($1,$2,$3) returning id', [code, pinHash, 'patient']);
+      await client.query(`insert into consents(patient_id,research_consent,data_consent,consent_version) values($1,true,true,'demo')`, [acc!.id]);
       await client.query(
         `insert into patient_profiles(patient_id,age,sex,weight_kg,height_cm,education,marital_status,occupation,income_group,diagnosis_duration_months,has_complications,has_treatment_side_effects)
          values($1,$2,$3,$4,$5,'SMA / sederajat','married','Wiraswasta','1m_3m',$6,false,false)`,

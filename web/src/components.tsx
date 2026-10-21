@@ -119,6 +119,21 @@ export function Select<T extends string>({ value, onChange, options, placeholder
   )
 }
 
+const ONBOARDING_STEPS = ['Persetujuan', 'Data diri awal', 'Profil lanjutan']
+
+/** Penunjuk langkah onboarding: Persetujuan -> Data diri awal -> Profil lanjutan. */
+export function OnboardingSteps({ current }: { current: 1 | 2 | 3 }) {
+  return (
+    <ol className="onboarding-steps" aria-label={`Langkah ${current} dari ${ONBOARDING_STEPS.length}`}>
+      {ONBOARDING_STEPS.map((label, i) => {
+        const n = i + 1
+        const state = n < current ? 'done' : n === current ? 'current' : 'todo'
+        return <li key={label} className={state} aria-current={state === 'current' ? 'step' : undefined}><b>{state === 'done' ? '✓' : n}</b><span>{label}</span></li>
+      })}
+    </ol>
+  )
+}
+
 export function Notice({ kind, children }: { kind: 'error' | 'success'; children: ReactNode }) {
   return (
     <p className={`notice ${kind}`} role={kind === 'error' ? 'alert' : 'status'}>

@@ -6,6 +6,7 @@ import { AdminPage } from './pages/AdminPage'
 import { LoginPage } from './pages/LoginPage'
 import { PatientApp } from './pages/PatientApp'
 import { ProfileForm } from './pages/ProfileForm'
+import { ConsentPage } from './pages/ConsentPage'
 
 type Session = { status: 'loading' } | { status: 'anon' } | { status: 'error'; message: string } | { status: 'ready'; me: Me }
 
@@ -37,14 +38,15 @@ export default function App() {
 
   const { me } = session
   if (me.role === 'researcher') return <AdminPage me={me} onLogout={logout} />
-  if (!me.onboardingComplete) {
+  // Onboarding: 1) persetujuan -> 2) data diri awal -> 3) profil lanjutan.
+  if (!me.consentGiven || !me.onboardingComplete) {
     return (
       <div className="patient-shell log-shell">
         <header className="patient-header">
           <Brand compact />
           <div className="header-actions"><span className="avatar">{me.code}</span><button className="icon-button" aria-label="Keluar" onClick={logout}><LogOut size={18} /></button></div>
         </header>
-        <ProfileForm onboarding onSaved={refresh} />
+        {!me.consentGiven ? <ConsentPage onDone={refresh} /> : <ProfileForm onboarding onSaved={refresh} />}
       </div>
     )
   }

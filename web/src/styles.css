@@ -262,3 +262,40 @@ td { font-size: 11px; }th { font-size: 10px; }
 .admin-content > .panel:first-of-type, .admin-content > .kpi-grid:first-of-type { margin-top: 0; }
 @media (max-width: 980px) { .section-links { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 560px) { .section-links { grid-template-columns: 1fr; } }
+
+/* Onboarding bertahap & persetujuan */
+.onboarding-steps { list-style: none; margin: 0 0 14px; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.onboarding-steps li { display: flex; flex-direction: column; align-items: center; gap: 5px; text-align: center; font-size: 10px; color: var(--muted); position: relative; }
+.onboarding-steps li + li::before { content: ''; position: absolute; top: 13px; right: 50%; width: 100%; height: 2px; background: #dfe7e4; z-index: 0; }
+.onboarding-steps li.done + li::before, .onboarding-steps li.current::before { background: var(--green-500); }
+.onboarding-steps b { position: relative; z-index: 1; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: white; border: 2px solid #dfe7e4; color: var(--muted); font-size: 12px; }
+.onboarding-steps li.current b { border-color: var(--green-700); background: var(--green-700); color: white; }
+.onboarding-steps li.done b { border-color: var(--green-500); background: var(--green-100); color: var(--green-700); }
+.onboarding-steps li.current span { color: var(--green-900); font-weight: 700; }
+.consent-block h3 { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.consent-block h3 b { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--green-100); color: var(--green-700); font-size: 12px; }
+.consent-block .consent-sub { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+.consent-block ul { margin: 0 0 14px; padding-left: 18px; display: grid; gap: 7px; font-size: 12.5px; line-height: 1.55; color: #344441; }
+.consent-check { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start; border: 1px solid #dce4e1; background: #fbfcfb; border-radius: 12px; padding: 12px; font-size: 13px; font-weight: 600; color: #2b3d3a; cursor: pointer; line-height: 1.45; }
+.consent-check input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--green-700); }
+.consent-check.checked { border-color: var(--green-700); background: var(--green-100); }
+.consent-note { font-size: 11px; color: var(--muted); text-align: center; margin: 4px 0 14px; line-height: 1.5; }
+
+/* Grafik per kategori (Riwayat pasien) */
+.category-charts .chart-tabs { margin: 12px 0 6px; }
+.category-charts .chart-tabs button { flex: 1; }
+.category-charts h4 { font-size: 12px; margin: 14px 0 4px; color: #344441; font-family: 'Plus Jakarta Sans'; }
+.day-chart { display: block; width: 100%; height: 170px; touch-action: pan-y; cursor: pointer; }
+.day-chart-sel { fill: var(--green-100); }
+.axis-label.strong { fill: var(--green-900); font-weight: 700; }
+.value-label { font-size: 11px; font-weight: 700; fill: #263835; }
+.chart-caption { font-size: 10.5px; color: var(--muted); line-height: 1.5; margin-top: 2px; }
+.chart-empty { font-size: 12px; color: var(--muted); padding: 22px 4px; text-align: center; }
+.stress-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin: 8px 0 6px; }
+.stress-day { border: 1px solid var(--line); background: white; border-radius: 11px; padding: 7px 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.stress-day span { font-size: 10px; color: var(--muted); font-weight: 600; }
+.stress-day b { font-size: 11px; }
+.stress-day.yes { background: #fbe4dc; border-color: #f0c3b3; }.stress-day.yes b { color: #93412e; }
+.stress-day.no { background: #edf5f2; }.stress-day.no b { color: #3a6b5f; }
+.stress-day.none b { color: #b7c1bf; }
+.stress-day.active { box-shadow: 0 0 0 2px var(--green-700); }

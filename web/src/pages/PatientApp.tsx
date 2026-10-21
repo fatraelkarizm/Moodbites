@@ -7,6 +7,7 @@ import { Brand, EmotionFace, Field, Loading, MoodThermometer, Notice, ScalePicke
 import { barrierOptions, easeOptions, foodCategories, labelOf, mealTypes, mindfulnessOptions, moodOptions, portionOptions, sleepOptions } from '../data'
 import { api, ApiError, type DayData, type FoodCategory, type History, type Meal, type MealType, type Me, type PersonalInsights, type Barrier, type FeedbackStatus } from '../lib/api'
 import { LinkedTimeline } from '../insights'
+import { CategoryCharts } from '../charts'
 import { personalSentence } from '../lib/insights'
 import { formatLongDate, formatShortDate, greeting, jakartaToday, shiftDate } from '../lib/date'
 import { ProfileForm } from './ProfileForm'
@@ -482,6 +483,7 @@ function HistoryPage({ me, navigate, onLogout }: { me: Me; navigate: (view: View
       <main className="patient-main">
         <div className="section-heading compact"><div><h2>Riwayat 7 hari</h2><p>Hanya kamu yang bisa melihat catatan ini</p></div></div>
         {error && <Notice kind="error">{error}</Notice>}
+        {history && <CategoryCharts dates={[...dates].reverse()} history={history} />}
         {insights && (
           <>
             <section className="form-card insight-card">
