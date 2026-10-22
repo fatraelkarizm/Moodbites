@@ -8,6 +8,7 @@ import { ACTIVE_DAYS_SQL } from './feasibility.js';
 
 const createSchema = z.object({ code: patientCodeSchema.optional() });
 const codeParams = z.object({ code: patientCodeSchema });
+const exclusionSchema = z.object({ excluded: z.boolean() });
 
 /** Kode berikutnya dengan pola P001, P002, ... berdasarkan kode berpola P+angka yang sudah ada. */
 async function nextCode(c: { query: (sql: string) => Promise<{ rows: Array<{ n: number | null }> }> }): Promise<string> {
@@ -21,7 +22,7 @@ export async function patientRoutes(app: FastifyInstance): Promise<void> {
   app.get('/api/admin/patients', { preHandler: guard }, async (request) => withAccount(request.account, async (c) => {
     const patients = await c.query(
       `with days as (${ACTIVE_DAYS_SQL})
-       select a.code, a.created_at as "createdAt", a.pin_reset_at as "pinResetAt",
+       select a.code, a.created_at as "createdAt", a.pin_reset_at as "pinResetAt", a.excluded_at as "excludedAt",
          exists(select 1 from patient_profiles p where p.patient_id = a.id) as "onboardingComplete",
          (a.locked_until is not null and a.locked_until > now()) as locked,
          (select max(entry_date) from days d where d.patient_id = a.id) as "lastEntryDate",
@@ -57,6 +58,23 @@ export async function patientRoutes(app: FastifyInstance): Promise<void> {
       // Keluarkan semua sesi lama agar PIN lama tidak bisa dipakai di perangkat lain.
       await c.query('delete from sessions where account_id = $1', [account.id]);
       return reply.header('Cache-Control', 'no-store').send({ code, pin });
+    });
+  });
+
+  app.patch('/api/admin/patients/:code/exclusion', { preHandler: guard }, async (request, reply) => {
+    const { code } = codeParams.parse(request.params);
+    const { excluded } = exclusionSchema.parse(request.body);
+    return withAccount(request.account, async (c) => {
+      const r = await c.query<{ id: string }>(
+        `update accounts
+         set excluded_at = case when $2::boolean then now() else null end,
+             exclusion_reason = case when $2::boolean then 'dropout' else null end
+         where upper(code) = $1 and role = 'patient' returning id`,
+        [code, excluded]);
+      const account = r.rows[0];
+      if (!account) return reply.code(404).send({ error: 'Pasien tidak ditemukan' });
+      if (excluded) await c.query('delete from sessions where account_id = $1', [account.id]);
+      return { code, excluded };
     });
   });
 }

@@ -31,13 +31,13 @@ export interface Sleep { entryDate: string; durationHours: number; quality: numb
 
 export interface Profile {
   age: number
-  sex: 'male' | 'female' | 'other' | 'prefer_not_to_say'
+  sex: 'male' | 'female' | 'other'
   weightKg: number
   heightCm: number
   education: string
   maritalStatus: 'single' | 'married' | 'divorced' | 'widowed' | 'other'
   occupation: string
-  incomeGroup: 'lt_1m' | '1m_3m' | '3m_5m' | 'gt_5m' | 'prefer_not_to_say'
+  incomeGroup: 'lt_1m' | '1m_3m' | '3m_5m' | 'gt_5m'
   diagnosisDurationMonths: number
   artStatus: 'not_started' | 'active' | 'stopped' | null
   artDurationMonths: number | null
@@ -140,7 +140,7 @@ export interface Feasibility {
 
 export interface PatientList {
   suggestedCode: string
-  patients: Array<{ code: string; createdAt: string; pinResetAt: string | null; onboardingComplete: boolean; locked: boolean; lastEntryDate: string | null; activeDays: number }>
+  patients: Array<{ code: string; createdAt: string; pinResetAt: string | null; excludedAt: string | null; onboardingComplete: boolean; locked: boolean; lastEntryDate: string | null; activeDays: number }>
 }
 export interface PatientCredential { code: string; pin: string }
 
@@ -221,6 +221,7 @@ export const api = {
   patients: () => request<PatientList>('/admin/patients'),
   createPatient: (code: string) => request<PatientCredential>('/admin/patients', { method: 'POST', body: { code } }),
   resetPatientPin: (code: string) => request<PatientCredential>(`/admin/patients/${encodeURIComponent(code)}/reset-pin`, { method: 'POST' }),
+  setPatientExcluded: (code: string, excluded: boolean) => request<{ code: string; excluded: boolean }>(`/admin/patients/${encodeURIComponent(code)}/exclusion`, { method: 'PATCH', body: { excluded } }),
 
   async history(): Promise<History> {
     const h = await request<History>('/history')

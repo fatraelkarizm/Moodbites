@@ -79,18 +79,21 @@ export async function feasibilityRoutes(app: FastifyInstance): Promise<void> {
            count(*) filter (where meal and mood and sleep)::int as "completeDays",
            count(*) filter (where meal or mood or sleep)::int as "activeDays",
            count(*) filter (where elapsed)::int as "elapsedDays"
-         from flags f join accounts a on a.id=f.patient_id where a.role='patient'
+         from flags f join accounts a on a.id=f.patient_id where a.role='patient' and a.excluded_at is null
          group by a.code order by a.code`, [STUDY_DAYS, jakartaDate()]),
       c.query<{ seconds: number }>(
-        `select sum(s)::int as seconds from (
+        `select sum(x.s)::int as seconds from (
            select patient_id, entry_date, fill_seconds s from mood_entries
            union all select patient_id, entry_date, fill_seconds from meal_entries
            union all select patient_id, entry_date, fill_seconds from sleep_entries) x
-         group by patient_id, entry_date having sum(s) > 0`),
+         join accounts a on a.id=x.patient_id
+         where a.role='patient' and a.excluded_at is null
+         group by x.patient_id, x.entry_date having sum(x.s) > 0`),
       c.query<{ ease: number; barriers: string[]; barriersOther: string | null; suggestion: string | null; code: string }>(
         `select f.ease, f.barriers, f.barriers_other as "barriersOther", f.suggestion, a.code
-         from study_feedback f join accounts a on a.id=f.patient_id order by a.code`),
-      c.query<{ n: number }>(`select count(*)::int n from accounts where role='patient'`),
+         from study_feedback f join accounts a on a.id=f.patient_id
+         where a.role='patient' and a.excluded_at is null order by a.code`),
+      c.query<{ n: number }>(`select count(*)::int n from accounts where role='patient' and excluded_at is null`),
     ]);
     const seconds = fill.rows.map((r) => r.seconds).sort((a, b) => a - b);
     const barrierCounts: Record<string, number> = {};

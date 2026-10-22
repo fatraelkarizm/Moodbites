@@ -16,7 +16,7 @@ export async function authenticate(request: FastifyRequest, reply: FastifyReply)
   const tokenHash = sha256(token);
   const result = await pool.query<{ id: string; role: Role }>(
     `update sessions s set expires_at = now() + ($2 * interval '1 day')
-     from accounts a where s.token_hash = $1 and s.account_id = a.id and s.expires_at > now()
+     from accounts a where s.token_hash = $1 and s.account_id = a.id and s.expires_at > now() and a.excluded_at is null
      returning a.id, a.role`, [tokenHash, config.SESSION_DAYS],
   );
   const account = result.rows[0];
@@ -52,7 +52,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     try {
       await client.query('begin');
       const result = await client.query<{ id: string; pin_hash: string; role: Role; failed_attempts: number; locked_until: Date | null }>(
-        'select id, pin_hash, role, failed_attempts, locked_until from accounts where upper(code) = upper($1) for update', [code],
+        'select id, pin_hash, role, failed_attempts, locked_until from accounts where upper(code) = upper($1) and excluded_at is null for update', [code],
       );
       const account = result.rows[0];
       const valid = account ? await verify(account.pin_hash, pin) : false;

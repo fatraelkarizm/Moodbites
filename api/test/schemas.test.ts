@@ -8,6 +8,8 @@ test('profile requires complication detail only when yes',()=>{
  const base={age:30,sex:'female',weightKg:60,heightCm:160,education:'S1',maritalStatus:'single',occupation:'Guru',incomeGroup:'3m_5m',diagnosisDurationMonths:12,hasComplications:false,hasTreatmentSideEffects:false};
  assert.equal(profileSchema.safeParse(base).success,true);
  assert.equal(profileSchema.safeParse({...base,hasComplications:true}).success,false);
+ assert.equal(profileSchema.safeParse({...base,sex:'prefer_not_to_say'}).success,false);
+ assert.equal(profileSchema.safeParse({...base,incomeGroup:'prefer_not_to_say'}).success,false);
 });
 test('stress cause is conditional',()=>{
  assert.equal(moodCreateSchema.safeParse({entryDate:'2026-10-19',mood:3,isStressed:true}).success,false);

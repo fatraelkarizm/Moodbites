@@ -8,7 +8,7 @@ export async function analyticsRoutes(app: FastifyInstance): Promise<void> {
     const q = analyticsQuerySchema.parse(request.query);
     return withAccount(request.account, async (c) => {
       const args = [q.from, q.to, q.patientCode ?? null];
-      const filter = `a.role='patient' and ($3::text is null or upper(a.code)=upper($3))`;
+      const filter = `a.role='patient' and a.excluded_at is null and ($3::text is null or upper(a.code)=upper($3))`;
       const [completion, moodDistribution, sleepDistribution, mealDistribution, categoryDistribution, stressDistribution, trend] = await Promise.all([
         c.query(`with dates as (select generate_series($1::date,$2::date,'1 day')::date d), patients as
           (select a.id,a.code from accounts a where ${filter})

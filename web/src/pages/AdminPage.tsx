@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Activity, Check, ChevronRight, ClipboardCheck, Copy, Flag, KeyRound, RotateCcw, UserPlus, GitCompareArrows, Download, FileSpreadsheet, HeartPulse, LayoutDashboard, LogOut, Menu, MoonStar,
-  RefreshCw, ShieldCheck, UsersRound, X,
+  RefreshCw, ShieldCheck, Undo2, UsersRound, UserX, X,
 } from 'lucide-react'
 import { Brand, EmotionFace, Loading, Notice } from '../components'
 import { barrierOptions, foodCategories, labelOf, moodOptions, type ScaleOption } from '../data'
@@ -171,17 +171,26 @@ function PatientsPanel() {
     try { show(await api.resetPatientPin(patientCode), true) } catch (e) { setError(e instanceof ApiError ? e.message : 'Gagal mereset PIN.') } finally { setBusy(false) }
   }
 
+  const setExcluded = async (patientCode: string, excluded: boolean) => {
+    const message = excluded
+      ? `Tandai ${patientCode} sebagai drop out?\n\nAkun akan dikeluarkan dari seluruh analisis dan tidak bisa login. Data tidak dihapus permanen.`
+      : `Aktifkan kembali ${patientCode}?\n\nAkun akan kembali masuk ke analisis dan bisa login memakai PIN terakhir.`
+    if (!window.confirm(message)) return
+    setError(''); setBusy(true)
+    try { await api.setPatientExcluded(patientCode, excluded); await load() } catch (e) { setError(e instanceof ApiError ? e.message : 'Gagal mengubah status pasien.') } finally { setBusy(false) }
+  }
+
   const copy = async () => {
     if (!credential) return
     try { await navigator.clipboard.writeText(`Kode: ${credential.code}\nPIN: ${credential.pin}`); setCopied(true) } catch { setCopied(false) }
   }
 
   const status = (p: PatientList['patients'][number]) =>
-    p.locked ? { label: 'Terkunci', cls: 'warning' } : !p.onboardingComplete ? { label: 'Belum onboarding', cls: 'neutral' } : { label: 'Aktif', cls: 'good' }
+    p.excludedAt ? { label: 'Drop out', cls: 'dropout' } : p.locked ? { label: 'Terkunci', cls: 'warning' } : !p.onboardingComplete ? { label: 'Belum onboarding', cls: 'neutral' } : { label: 'Aktif', cls: 'good' }
 
   return (
     <section className="panel manage-panel" id="kelola">
-      <div className="panel-title"><div><h3>Kelola pasien</h3><p>Buat akun pasien baru atau reset PIN. Data pasien tetap hanya kode, tanpa nama atau nomor HP.</p></div></div>
+      <div className="panel-title"><div><h3>Kelola pasien</h3><p>Buat akun pasien baru atau reset PIN. Demi keamanan, PIN lama tidak disimpan dan tidak dapat dilihat kembali.</p></div></div>
 
       <form className="manage-create" onSubmit={create}>
         <label className="field"><span>Kode pasien baru</span><input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} maxLength={20} placeholder="P001" aria-describedby="code-hint" /></label>
@@ -192,16 +201,19 @@ function PatientsPanel() {
       {error && <Notice kind="error">{error}</Notice>}
 
       {credential && (
-        <div className="credential-card" role="status">
-          <div>
-            <p className="eyebrow">{credential.reset ? 'PIN BARU' : 'AKUN DIBUAT'}</p>
-            <dl><div><dt>Kode</dt><dd>{credential.code}</dd></div><div><dt>PIN</dt><dd>{credential.pin}</dd></div></dl>
-            <p className="credential-warning"><KeyRound size={14} /> PIN ini <strong>hanya ditampilkan sekali</strong>. Catat sekarang dan berikan langsung ke pasien, sebaiknya terpisah dari link aplikasi.</p>
-          </div>
-          <div className="credential-actions">
-            <button type="button" className="secondary-button" onClick={copy}>{copied ? <><Check size={15} /> Tersalin</> : <><Copy size={15} /> Salin kode & PIN</>}</button>
-            <button type="button" className="primary-button" onClick={() => setCredential(null)}>Sudah dicatat</button>
-          </div>
+        <div className="modal-backdrop">
+          <section className="credential-card credential-modal" role="dialog" aria-modal="true" aria-labelledby="credential-title">
+            <div>
+              <p className="eyebrow">{credential.reset ? 'PIN BARU' : 'AKUN DIBUAT'}</p>
+              <h3 id="credential-title">{credential.reset ? `PIN ${credential.code} berhasil direset` : `Akun ${credential.code} berhasil dibuat`}</h3>
+              <dl><div><dt>Kode</dt><dd>{credential.code}</dd></div><div><dt>PIN</dt><dd>{credential.pin}</dd></div></dl>
+              <p className="credential-warning"><KeyRound size={14} /> PIN ini <strong>hanya ditampilkan sekali</strong>. Salin atau catat sebelum menutup dialog.</p>
+            </div>
+            <div className="credential-actions">
+              <button type="button" className="secondary-button" onClick={copy}>{copied ? <><Check size={15} /> Tersalin</> : <><Copy size={15} /> Salin kode & PIN</>}</button>
+              <button type="button" className="primary-button" onClick={() => setCredential(null)}>Sudah dicatat</button>
+            </div>
+          </section>
         </div>
       )}
 
@@ -219,7 +231,12 @@ function PatientsPanel() {
                 <td>{p.lastEntryDate ? formatShortDate(p.lastEntryDate) : '–'}</td>
                 <td>{p.activeDays} hari</td>
                 <td>{formatShortDate(p.createdAt.slice(0, 10))}{p.pinResetAt ? ' · PIN direset' : ''}</td>
-                <td><button type="button" className="text-button" disabled={busy} onClick={() => reset(p.code)}><RotateCcw size={14} /> Reset PIN</button></td>
+                <td><div className="patient-actions">
+                  {!p.excludedAt && <button type="button" className="text-button" disabled={busy} onClick={() => reset(p.code)}><RotateCcw size={14} /> Reset PIN</button>}
+                  <button type="button" className={`text-button${p.excludedAt ? '' : ' danger'}`} disabled={busy} onClick={() => setExcluded(p.code, !p.excludedAt)}>
+                    {p.excludedAt ? <><Undo2 size={14} /> Aktifkan lagi</> : <><UserX size={14} /> Drop out</>}
+                  </button>
+                </div></td>
               </tr>
             )
           })}

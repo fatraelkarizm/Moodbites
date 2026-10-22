@@ -30,7 +30,7 @@ async function loadDays(c: PoolClient, from: string, to: string, filter: { patie
      left join mood_entries mo on mo.patient_id = d.patient_id and mo.entry_date = d.entry_date
      left join sleep_entries s on s.patient_id = d.patient_id and s.entry_date = d.entry_date
      left join day_checks dc on dc.patient_id = d.patient_id and dc.entry_date = d.entry_date
-     where a.role = 'patient' and d.entry_date between $1 and $2
+     where a.role = 'patient' and a.excluded_at is null and d.entry_date between $1 and $2
        and ($3::text is null or upper(a.code) = upper($3))
        and ($4::uuid is null or a.id = $4)
      order by a.code, d.entry_date`,

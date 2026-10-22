@@ -80,7 +80,6 @@ export const sexOptions: Opt<'sex'> = [
   { value: 'female', label: 'Perempuan' },
   { value: 'male', label: 'Laki-laki' },
   { value: 'other', label: 'Lainnya' },
-  { value: 'prefer_not_to_say', label: 'Memilih tidak menjawab' },
 ]
 export const educationOptions = ['Tidak sekolah', 'SD / sederajat', 'SMP / sederajat', 'SMA / sederajat', 'Diploma', 'S1 / sederajat', 'Pascasarjana']
 export const maritalOptions: Opt<'maritalStatus'> = [
@@ -95,7 +94,6 @@ export const incomeOptions: Opt<'incomeGroup'> = [
   { value: '1m_3m', label: 'Rp1–3 juta' },
   { value: '3m_5m', label: 'Rp3–5 juta' },
   { value: 'gt_5m', label: 'Di atas Rp5 juta' },
-  { value: 'prefer_not_to_say', label: 'Memilih tidak menjawab' },
 ]
 export const artStatusOptions: Opt<'artStatus'> = [
   { value: 'not_started', label: 'Belum mulai' },

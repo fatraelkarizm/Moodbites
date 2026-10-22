@@ -19,8 +19,9 @@ Buka link yang sama dengan partisipan, lalu masuk memakai **kode dan PIN penelit
 Di dashboard, buka menu **Kelola pasien**:
 
 - **Membuat akun:** kode pasien disarankan otomatis (P001, P002, …) dan boleh diubah (huruf, angka, atau tanda hubung). Tekan **Buat akun**. Sistem membuat PIN 8 angka secara acak.
-- **PIN hanya ditampilkan sekali.** Tekan **Salin kode & PIN** atau catat, lalu berikan ke pasien. Sebaiknya kirim PIN terpisah dari link aplikasi. Tekan **Sudah dicatat** untuk menutup.
+- **PIN hanya ditampilkan sekali.** Tekan **Salin kode & PIN** atau catat, lalu berikan ke pasien. PIN lama tidak dapat dilihat kembali karena sistem hanya menyimpan hash-nya. Sebaiknya kirim PIN terpisah dari link aplikasi. Tekan **Sudah dicatat** untuk menutup.
 - **Pasien lupa PIN atau akunnya terkunci** (5 kali salah PIN): tekan **Reset PIN** pada baris pasien. PIN lama langsung tidak berlaku, pasien otomatis keluar dari HP-nya, dan kunci akun dibuka.
+- **Pasien drop out:** tekan **Drop out** pada baris pasien. Akun langsung tidak bisa login dan otomatis dikeluarkan dari dashboard analitik serta file ekspor. Datanya tidak dihapus permanen; tekan **Aktifkan lagi** bila salah memilih.
 - **Status pasien:** *Belum onboarding* (belum mengisi profil awal), *Aktif*, atau *Terkunci*.
 - Jangan menulis nama atau nomor HP pasien sebagai kode. Simpan daftar pasangan nama ↔ kode di luar aplikasi, sesuai protokol studi.
 
@@ -109,9 +110,9 @@ Di bagian bawah dashboard (**Ekspor CSV**) ada 6 file:
 | `note` | catatan perasaan hari ini (opsional) |
 | `is_stressed` | `true` / `false`; `stress_cause` hanya terisi bila `true` |
 | `quality` (tidur) | 1 sangat buruk · 2 buruk · 3 cukup · 4 baik · 5 sangat baik |
-| `sex` | `female` · `male` · `other` · `prefer_not_to_say` |
+| `sex` | `female` · `male` · `other` |
 | `marital_status` | `single` · `married` · `divorced` · `widowed` · `other` |
-| `income_group` | `lt_1m` (< Rp1 jt) · `1m_3m` · `3m_5m` · `gt_5m` (> Rp5 jt) · `prefer_not_to_say` |
+| `income_group` | `lt_1m` (< Rp1 jt) · `1m_3m` · `3m_5m` · `gt_5m` (> Rp5 jt) |
 | `diagnosis_duration_months` | lama sejak diagnosis, dalam bulan |
 | Kolom klinis opsional lainnya | Kode nilai mengikuti pilihan di form profil (`web/src/data.ts`); kosong = tidak diisi |
 | `smoking` | `never` · `former` · `current` |

@@ -20,12 +20,18 @@ const emptyDraft: Draft = {
   hasTreatmentSideEffects: undefined, treatmentSideEffects: '',
 }
 
-const fromProfile = (p: Profile): Draft => ({
-  ...emptyDraft,
-  ...Object.fromEntries(Object.entries(p).map(([k, v]) => [k, v === null ? '' : typeof v === 'number' ? String(v) : v])),
-  // Lama diagnosis ditampilkan dalam tahun agar mudah diisi pasien.
-  diagnosisDurationMonths: String(Math.round((p.diagnosisDurationMonths / 12) * 10) / 10),
-} as Draft)
+const fromProfile = (p: Profile): Draft => {
+  const draft = {
+    ...emptyDraft,
+    ...Object.fromEntries(Object.entries(p).map(([k, v]) => [k, v === null ? '' : typeof v === 'number' ? String(v) : v])),
+    // Lama diagnosis ditampilkan dalam tahun agar mudah diisi pasien.
+    diagnosisDurationMonths: String(Math.round((p.diagnosisDurationMonths / 12) * 10) / 10),
+  } as Draft
+  // Nilai lama dari versi sebelum pilihan "tidak menjawab" dihapus wajib dipilih ulang.
+  if (String(draft.sex) === 'prefer_not_to_say') draft.sex = ''
+  if (String(draft.incomeGroup) === 'prefer_not_to_say') draft.incomeGroup = ''
+  return draft
+}
 
 const optNum = (v: string) => (v.trim() === '' ? null : Number(v))
 const optText = <T extends string>(v: T | '') => (v === '' ? null : v)

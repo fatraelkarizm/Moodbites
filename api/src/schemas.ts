@@ -10,13 +10,13 @@ export const foodCategories = ['karbo', 'gorengan', 'manis', 'sayur_buah', 'prot
 
 export const profileSchema = z.object({
   age: z.number().int().min(10).max(120),
-  sex: z.enum(['male', 'female', 'other', 'prefer_not_to_say']),
+  sex: z.enum(['male', 'female', 'other']),
   weightKg: z.number().min(20).max(500),
   heightCm: z.number().min(80).max(250),
   education: z.string().trim().min(1).max(100),
   maritalStatus: z.enum(['single', 'married', 'divorced', 'widowed', 'other']),
   occupation: z.string().trim().min(1).max(150),
-  incomeGroup: z.enum(['lt_1m', '1m_3m', '3m_5m', 'gt_5m', 'prefer_not_to_say']),
+  incomeGroup: z.enum(['lt_1m', '1m_3m', '3m_5m', 'gt_5m']),
   diagnosisDurationMonths: z.number().int().min(0).max(1440),
   artStatus: z.enum(['not_started', 'active', 'stopped']).nullable().optional(),
   artDurationMonths: z.number().int().min(0).max(1440).nullable().optional(),

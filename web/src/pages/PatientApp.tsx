@@ -20,11 +20,18 @@ const errorText = (err: unknown) => (err instanceof ApiError ? err.message : 'Te
 function useDay(date: string) {
   const [day, setDay] = useState<DayData | null>(null)
   const [error, setError] = useState('')
-  const reload = useCallback(() => {
+  const reload = useCallback(async () => {
     setError('')
-    return api.getDay(date).then(setDay).catch((e) => setError(errorText(e)))
+    try {
+      const next = await api.getDay(date)
+      setDay(next)
+      return next
+    } catch (e) {
+      setError(errorText(e))
+      return null
+    }
   }, [date])
-  useEffect(() => { setDay(null); reload() }, [reload])
+  useEffect(() => { setDay(null); void reload() }, [reload])
   return { day, error, reload }
 }
 
@@ -422,8 +429,15 @@ function LogPage({ initialTab, navigate }: { initialTab: LogTab; navigate: (view
   const today = jakartaToday()
   const [tab, setTab] = useState<LogTab>(initialTab)
   const [date, setDate] = useState(today)
+  const [completedDate, setCompletedDate] = useState<string | null>(null)
   const { day, error, reload } = useDay(date)
   const back = () => navigate('today')
+  const handleSaved = async () => {
+    const wasComplete = !!day?.mood && day.meals.length > 0 && !!day.sleep
+    const next = await reload()
+    if (!wasComplete && next?.mood && next.meals.length > 0 && next.sleep) setCompletedDate(date)
+    return next
+  }
 
   const tabs: Array<{ key: LogTab; label: string; icon: React.ReactNode; done?: boolean }> = [
     { key: 'mood', label: 'Perasaan', icon: <HeartPulse size={17} />, done: !!day?.mood },
@@ -456,9 +470,21 @@ function LogPage({ initialTab, navigate }: { initialTab: LogTab; navigate: (view
       {tab === 'profile' ? <ProfileForm onSaved={() => undefined} onCancel={back} />
         : error ? <div className="form-page"><Notice kind="error">{error}</Notice></div>
         : !day ? <Loading />
-        : tab === 'mood' ? <MoodForm key={`mood-${date}`} date={date} day={day} onSaved={reload} onCancel={back} />
-        : tab === 'meal' ? <MealForm key={`meal-${date}`} date={date} day={day} onSaved={reload} onCancel={back} />
-        : <SleepForm key={`sleep-${date}`} date={date} day={day} onSaved={reload} onCancel={back} />}
+        : tab === 'mood' ? <MoodForm key={`mood-${date}`} date={date} day={day} onSaved={handleSaved} onCancel={back} />
+        : tab === 'meal' ? <MealForm key={`meal-${date}`} date={date} day={day} onSaved={handleSaved} onCancel={back} />
+        : <SleepForm key={`sleep-${date}`} date={date} day={day} onSaved={handleSaved} onCancel={back} />}
+      {completedDate && (
+        <div className="modal-backdrop">
+          <section className="daily-complete-modal" role="dialog" aria-modal="true" aria-labelledby="daily-complete-title">
+            <span className="completion-icon"><Sparkles size={28} /></span>
+            <p className="eyebrow">CATATAN HARIAN LENGKAP</p>
+            <h2 id="daily-complete-title">Terima kasih sudah melengkapi catatan!</h2>
+            <p>Makan, perasaan, dan tidur untuk {completedDate === today ? 'hari ini' : formatLongDate(completedDate)} sudah tercatat. Konsistensimu sangat membantu penelitian ini.</p>
+            <button type="button" className="primary-button" onClick={() => navigate('today')}><Check size={17} /> Kembali ke beranda</button>
+            <button type="button" className="text-button" onClick={() => setCompletedDate(null)}>Tetap di halaman ini</button>
+          </section>
+        </div>
+      )}
     </div>
   )
 }
